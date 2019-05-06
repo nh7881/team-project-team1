@@ -9,9 +9,9 @@ const string Block::version = "RentalRecord";
 
 Block::Block() : Block(NULL) {}
 
-// 16Áø¼ö ±âÁØ 64ÀÚ¸®ÀÇ ¼ıÀÚ - 0ÀÌ ÃÖ´ë 64°³ ³ª¿Ã ¼ö ÀÖ´Ù.
+// 16ì§„ìˆ˜ ê¸°ì¤€ 64ìë¦¬ì˜ ìˆ«ì - 0ì´ ìµœëŒ€ 64ê°œ ë‚˜ì˜¬ ìˆ˜ ìˆë‹¤.
 Block::Block(const Block * _previousBlock) : previousBlock(_previousBlock) {
-	// bits °ªÀÇ ¹üÀ§¸¦ Ã¼Å©ÇÑ´Ù.
+	// bits ê°’ì˜ ë²”ìœ„ë¥¼ ì²´í¬í•œë‹¤.
 	if (bits < 0 || bits > 32)
 		cout << "error: block bits must be between 0 and 32.\n\n";
 }
@@ -41,7 +41,7 @@ void Block::mining() {
 	delete[] buffer;
 }
 
-// ¹İÈ¯µÈ Æ÷ÀÎÅÍ´Â ÈÄ¿¡ delete[]·Î ÇÒ´ç ÇØÁ¦ÇØ¾ß ÇÔ.
+// ë°˜í™˜ëœ í¬ì¸í„°ëŠ” í›„ì— delete[]ë¡œ í• ë‹¹ í•´ì œí•´ì•¼ í•¨.
 BYTE * Block::getBlockHeader() const {
 	size_t i = 0;		// transactionData index
 	size_t j;			// block header index	
@@ -79,7 +79,7 @@ BYTE * Block::getBlockHeader() const {
 	return buffer;
 }
 
-// Assertion: block¿¡ transaction °³¼ö > 0
+// Assertion: blockì— transaction ê°œìˆ˜ > 0
 void Block::findMerkleHash() const {
 	BYTE * hash;
 	vector<BYTE *> transactionHash;
@@ -87,8 +87,13 @@ void Block::findMerkleHash() const {
 	transactionHash.reserve(MAX_TRANSACTION_COUNT);
 	transactionHash2.reserve(MAX_TRANSACTION_COUNT);
 
-	SHA256_Encrpyt(getTransactionData(), )
-	transactionHash.push_back(getTransactionData);
+	// ê°œë³„ transactionì„ 
+	for (size_t i = 0; i < tx.size(); i++) {
+		SHA256_Encrpyt(tx[i]->getTransactionData(), tx[i]->getTransactionLength(), hash);
+
+	}
+	
+	
 
 	while (transactionHash.size() + transactionHash2.size() != 1) {
 		while (transactionHash.size() > 1)
@@ -108,12 +113,12 @@ void Block::findMerkleHash() const {
 		}
 	}
 
-	// ¸ÓÅ¬·çÆ®¸¦ orderhash¿¡ º¹»çÇÑ´Ù.
+	// ë¨¸í´ë£¨íŠ¸ë¥¼ orderhashì— ë³µì‚¬í•œë‹¤.
 	memcpy((void *)merkleHash, transactionHash[0], 32);
 	delete[] transactionHash[0];
 }
 
-// hashOut delete[] ÇÊ¿äÇÔ. _hashIn back 2°³ ¿ø¼Ò¸¦ ºÙÀÎ °Í(64 byte)À» SHA256ÇØ¼­(32 byte) _hashOut¿¡ push_back
+// hashOut delete[] í•„ìš”í•¨. _hashIn back 2ê°œ ì›ì†Œë¥¼ ë¶™ì¸ ê²ƒ(64 byte)ì„ SHA256í•´ì„œ(32 byte) _hashOutì— push_back
 inline void Block::hashingTwoHash(vector<BYTE *> & _hashIn, vector<BYTE *> & _hashOut) const {
 	BYTE * hashIn = new BYTE[64];
 	BYTE * hashOut = new BYTE[32];

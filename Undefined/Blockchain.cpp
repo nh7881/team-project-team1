@@ -21,7 +21,7 @@ ostream & operator<<(ostream& o, const BYTE * hash) {
 	return o;
 }
 
-// Genesis blockÀ» »ı¼ºÇÑ´Ù.
+// Genesis blockì„ ìƒì„±í•œë‹¤.
 Blockchain::Blockchain() {
 	Block * _genesisBlock = new Block();
 	_genesisBlock->tx.reserve(MAX_TRANSACTION_COUNT);
@@ -30,23 +30,23 @@ Blockchain::Blockchain() {
 	lastBlock = NULL;
 }
 
-// Genesis blockÀ» »ı¼ºÇÏ°í ±× ºí·Ï¿¡ TransactionÀ» Ãß°¡ÇÑ´Ù.
+// Genesis blockì„ ìƒì„±í•˜ê³  ê·¸ ë¸”ë¡ì— Transactionì„ ì¶”ê°€í•œë‹¤.
 Blockchain::Blockchain(Transaction * _tx) : Blockchain() {
 	addTransaction(_tx);
 }
 
-// waiting block¿¡ transactionÀ» Ãß°¡ÇÑ´Ù.
+// waiting blockì— transactionì„ ì¶”ê°€í•œë‹¤.
 void Blockchain::addTransaction(Transaction * _tx) {
 	waitingBlock->addTransaction(_tx);
 
-	// waiting blockÀÇ transactionÀÌ ²ËÂ÷¸é
+	// waiting blockì˜ transactionì´ ê½‰ì°¨ë©´
 	if (waitingBlock->isFull()) {
-		waitingBlock->findMerkleHash();		// transactionÀ¸·Î merkletreeÀÇ merkleroot(=merklehash) °è»ê
-		waitingBlock->mining();				// waiting blockÀ» Ã¤±¼
-		addBlock(waitingBlock);				// waiting blockÀ» blockchain¿¡ Ãß°¡
+		waitingBlock->findMerkleHash();		// transactionìœ¼ë¡œ merkletreeì˜ merkleroot(=merklehash) ê³„ì‚°
+		waitingBlock->mining();				// waiting blockì„ ì±„êµ´
+		addBlock(waitingBlock);				// waiting blockì„ blockchainì— ì¶”ê°€
 
-		Block * newWaitingBlock = new Block(lastBlock);		// new waiting block »ı¼º
-		newWaitingBlock->tx.reserve(MAX_TRANSACTION_COUNT);	// transaction vector Å©±â ¿¹¾à
+		Block * newWaitingBlock = new Block(lastBlock);		// new waiting block ìƒì„±
+		newWaitingBlock->tx.reserve(MAX_TRANSACTION_COUNT);	// transaction vector í¬ê¸° ì˜ˆì•½
 		waitingBlock = newWaitingBlock;
 	}
 }
@@ -108,11 +108,11 @@ void Blockchain::saveBlockchain() const {
 		fout << "Bits: " << presentBlock->bits << '\n';
 		fout << "Nonce: " << presentBlock->nonce << "\n\n";
 
-		// ¾Æ·¡ ÄÚµå´Â Transaction Å¬·¡½º ±¸Á¶¿¡ µû¶ó ´Ş¶óÁú ¼ö ÀÖÀ½.
+		// ì•„ë˜ ì½”ë“œëŠ” Transaction í´ë˜ìŠ¤ êµ¬ì¡°ì— ë”°ë¼ ë‹¬ë¼ì§ˆ ìˆ˜ ìˆìŒ.
 		for (unsigned int j = 0; j < MAX_TRANSACTION_COUNT; j++) {
 			fout << "Transaction #" << j + 1 << '\n';
 			fout << "who: " << presentBlock->tx[j]->who << '\n';
-			fout << "when: " << timeToString(presentBlock->tx[j]->when) << '\n'; // ³¯Â¥·Î ÁöÁ¤?
+			fout << "when: " << timeToString(presentBlock->tx[j]->when) << '\n'; // ë‚ ì§œë¡œ ì§€ì •?
 			fout << "what: " << presentBlock->tx[j]->what << '\n';
 			fout << "why: " << presentBlock->tx[j]->why << '\n';
 		}
@@ -154,17 +154,17 @@ string Blockchain::timeToString(time_t t) const {
 	return result;
 }
 
-// ºí·ÏÀÇ ¸ğµç order Á¤º¸¸¦ Ãâ·ÂÇÑ´Ù.
+// ë¸”ë¡ì˜ ëª¨ë“  order ì •ë³´ë¥¼ ì¶œë ¥í•œë‹¤.
 //void Blockchain::print_all_order() {
 //	if (last_block == NULL) {
 //		std::cout << "There is no history of your order...\n";
 //		return;
 //	}
 //
-//	// ¸¶Áö¸· ºí·ÏºÎÅÍ Ã¹ ºí·Ï±îÁö, ¸ğµç ºí·Ï¿¡ ´ëÇÏ¿©
+//	// ë§ˆì§€ë§‰ ë¸”ë¡ë¶€í„° ì²« ë¸”ë¡ê¹Œì§€, ëª¨ë“  ë¸”ë¡ì— ëŒ€í•˜ì—¬
 //	const Block * block = last_block;
 //	for (std::uint64_t i = num_of_block; i > 0; i--, block = block->get_previous_block()) {
-//		// ºí·ÏÀÌ À¯È¿ÇÑ ºí·ÏÀÌ¸é
+//		// ë¸”ë¡ì´ ìœ íš¨í•œ ë¸”ë¡ì´ë©´
 //		if (block->is_valid_block() && block->is_valid_order()) {
 //			std::cout << "\n\nBlockhash: ";
 //			printSHA256(block->get_blockhash());
@@ -172,11 +172,11 @@ string Blockchain::timeToString(time_t t) const {
 //			printSHA256(block->get_orderhash());
 //
 //			std::size_t size = block->get_order().size();
-//			// ±× ºí·ÏÀÇ ¸ğµç order¸¦ Ãâ·Â
+//			// ê·¸ ë¸”ë¡ì˜ ëª¨ë“  orderë¥¼ ì¶œë ¥
 //			for (std::int32_t j = size - 1; j > -1; j--)
 //				block->get_order()[j]->print();
 //		}
-//		// À¯È¿ÇÏÁö ¾ÊÀ¸¸é ¸Ş¼¼Áö Ãâ·Â
+//		// ìœ íš¨í•˜ì§€ ì•Šìœ¼ë©´ ë©”ì„¸ì§€ ì¶œë ¥
 //		else {
 //			std::cout << "Digital forgery had occured in " << i << "th block...";
 //			break;
@@ -184,20 +184,20 @@ string Blockchain::timeToString(time_t t) const {
 //	}
 //}
 //
-//// ºí·ÏÀÇ order¸¦ ¹İÈ¯ÇÑ´Ù.
+//// ë¸”ë¡ì˜ orderë¥¼ ë°˜í™˜í•œë‹¤.
 //const Order * Blockchain::get_order(time_t _order_timestamp) const {
 //	if (last_block == NULL) {
 //		std::cout << "There is no history of your order...\n";
 //		return NULL;
 //	}
 //
-//	// ¸¶Áö¸· ºí·ÏºÎÅÍ ¼øÂ÷ÀûÀ¸·Î ºí·ÏÀ» Ã£´Â´Ù.
+//	// ë§ˆì§€ë§‰ ë¸”ë¡ë¶€í„° ìˆœì°¨ì ìœ¼ë¡œ ë¸”ë¡ì„ ì°¾ëŠ”ë‹¤.
 //	const Block * block = last_block;
 //	while (block->get_timestamp() >= _order_timestamp) {
 //		block = block->get_previous_block();
 //	}
 //
-//	// Ã£Àº ºí·Ï ¾È¿¡¼­ ÀÌÁøÅ½»öÀ¸·Î ¿øÇÏ´Â order¸¦ Ã£´Â´Ù.
+//	// ì°¾ì€ ë¸”ë¡ ì•ˆì—ì„œ ì´ì§„íƒìƒ‰ìœ¼ë¡œ ì›í•˜ëŠ” orderë¥¼ ì°¾ëŠ”ë‹¤.
 //	for (std::int32_t low = 0, high = block->get_order().size() - 1; low <= high;) {
 //		std::int32_t mid = ((unsigned int)low + (unsigned int)high) >> 1;
 //		time_t midVal = block->get_order()[mid]->get_timestamp();

@@ -1,7 +1,7 @@
 #pragma once
 #ifndef BLOCK_H
 #define BLOCK_H
-#define MAX_TRANSACTION_COUNT 1			// ÇÑ ºí·Ï¿¡ µé¾î°¥ ¼ö ÀÖ´Â ÃÖ´ë transactionÀÇ °³¼ö
+#define MAX_TRANSACTION_COUNT 1			// í•œ ë¸”ë¡ì— ë“¤ì–´ê°ˆ ìˆ˜ ìˆëŠ” ìµœëŒ€ transactionì˜ ê°œìˆ˜
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -13,29 +13,29 @@
 class Transaction;
 
 class Block {
-	friend class Blockchain;				// Block ³»¿ëÀ»
+	friend class Blockchain;				// Block ë‚´ìš©ì„
 
-	BYTE blockHash[32];						// BlockÀÇ ID
+	BYTE blockHash[32];						// Blockì˜ ID
 
-	const static std::string version;		// Blockchain ÀÌ¸§
-	const Block * previousBlock;			// ÀÌÀü ºí·Ï
-	BYTE merkleHash[32];					// °³º° transaction ÇØ½Ã°ªÀ¸·Î ¸¸µç ¸ÓÅ¬Æ®¸®(ÇØ½ÃÆ®¸®)ÀÇ ¸ÓÅ¬·çÆ®
-	time_t timestamp;						// ºí·ÏÀÌ ºí·ÏÃ¼ÀÎ¿¡ ½ÂÀÎµÈ ½Ã°¢
-	int bits = 2;							// blockhash ¾Õ¿¡ ³ª¿Í¾ß ÇÒ 0ÀÇ °³¼ö(³­ÀÌµµ Á¶Àı)
-	std::int64_t nonce;						// ÀÓÀÇ ´ëÀÔ ¼ö
+	const static std::string version;		// Blockchain ì´ë¦„
+	const Block * previousBlock;			// ì´ì „ ë¸”ë¡
+	BYTE merkleHash[32];					// ê°œë³„ transaction í•´ì‹œê°’ìœ¼ë¡œ ë§Œë“  ë¨¸í´íŠ¸ë¦¬(í•´ì‹œíŠ¸ë¦¬)ì˜ ë¨¸í´ë£¨íŠ¸
+	time_t timestamp;						// ë¸”ë¡ì´ ë¸”ë¡ì²´ì¸ì— ìŠ¹ì¸ëœ ì‹œê°
+	int bits = 2;							// blockhash ì•ì— ë‚˜ì™€ì•¼ í•  0ì˜ ê°œìˆ˜(ë‚œì´ë„ ì¡°ì ˆ)
+	std::int64_t nonce;						// ì„ì˜ ëŒ€ì… ìˆ˜
 
 	std::vector<const Transaction *> tx;	// Transaction
 
-	// Block class¿¡¼­ »ç¿ëÇÏ´Â ¸Ş¼Òµå
+	// Block classì—ì„œ ì‚¬ìš©í•˜ëŠ” ë©”ì†Œë“œ
 	BYTE * getBlockHeader() const;
 	inline bool miningSuccess() const;
 	inline void hashingTwoHash(std::vector<BYTE *> & hash, std::vector<BYTE *> & hash2) const;
 
-	// Blockchain class¿¡¼­ »ç¿ëÇÏ´Â ¸Ş¼Òµå
+	// Blockchain classì—ì„œ ì‚¬ìš©í•˜ëŠ” ë©”ì†Œë“œ
 	Block();
 	Block(const Block * _previousBlock);
 
-	bool isValid() const;					// -> test Áß
+	bool isValid() const;					// -> test ì¤‘
 	inline bool isFull() const;
 	void mining();
 	void findMerkleHash() const;

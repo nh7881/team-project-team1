@@ -8,10 +8,10 @@ class Block;
 class Transaction;
 
 class Blockchain {
-	const Block * genesisBlock;			// Ã¹¹øÂ° ºí·Ï
-	const Block * lastBlock;			// ¸¶Áö¸· ºí·Ï
-	Block * waitingBlock;				// ºí·ÏÃ¼ÀÎ¿¡ Æ÷ÇÔµÇ±â À§ÇØ °ËÁõÀ» ±â´Ù¸®´Â ºí·Ï(¾ÆÁ÷ °ËÁõµÇÁö ¾ÊÀº ºí·Ï)
-	static std::uint64_t blockCount;	// ºí·ÏÀÇ ÃÑ °³¼ö
+	const Block * genesisBlock;			// ì²«ë²ˆì§¸ ë¸”ë¡
+	const Block * lastBlock;			// ë§ˆì§€ë§‰ ë¸”ë¡
+	Block * waitingBlock;				// ë¸”ë¡ì²´ì¸ì— í¬í•¨ë˜ê¸° ìœ„í•´ ê²€ì¦ì„ ê¸°ë‹¤ë¦¬ëŠ” ë¸”ë¡(ì•„ì§ ê²€ì¦ë˜ì§€ ì•Šì€ ë¸”ë¡)
+	static std::uint64_t blockCount;	// ë¸”ë¡ì˜ ì´ ê°œìˆ˜
 
 	inline void addBlock(Block * _block);
 	std::string timeToString(time_t t) const;
@@ -21,8 +21,8 @@ public:
 	Blockchain(Transaction * _tx);
 
 	void addTransaction(Transaction * _tx);
-	void saveBlockchain() const;	// -> test Áß 
-	void loadBlockchain();			// -> °³¹ß Áß
+	void saveBlockchain() const;	// -> test ì¤‘ 
+	void loadBlockchain();			// -> ê°œë°œ ì¤‘
 
 	// getter method
 	const Block * getGenesisBlock() const;
@@ -32,14 +32,14 @@ public:
 	//for debug
 	void printAllBlockHash() const;
 	void printAllMerkleHash() const;
-	void printAllTransaction() const;		// -> °³¹ß Áß
-	//void printWaitingBlock() const;		// -> °³¹ß Áß
+	void printAllTransaction() const;		// -> ê°œë°œ ì¤‘
+	//void printWaitingBlock() const;		// -> ê°œë°œ ì¤‘
 
-	// tx ³»¿ë °Ë»ö ¸Ş¼Òµå					// -> °³¹ß Áß
+	// tx ë‚´ìš© ê²€ìƒ‰ ë©”ì†Œë“œ					// -> ê°œë°œ ì¤‘
 	
 };
 
-// waiting blockÀ» ºí·ÏÃ¼ÀÎ¿¡ ¿¬°áÇÑ´Ù.
+// waiting blockì„ ë¸”ë¡ì²´ì¸ì— ì—°ê²°í•œë‹¤.
 inline void Blockchain::addBlock(Block * _block) {
 	lastBlock = _block;
 	blockCount++;

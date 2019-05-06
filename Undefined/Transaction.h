@@ -8,21 +8,21 @@
 
 class Transaction
 {
-	friend class Blockchain;	// Transaction ³»¿ëÀ» ÆÄÀÏ I/OÇÒ ¶§ Transactio class¿¡ Á¢±Ù
+	friend class Blockchain;	// Transaction ë‚´ìš©ì„ íŒŒì¼ I/Oí•  ë•Œ Transactio classì— ì ‘ê·¼
 
 	std::string who;
 	time_t when;
 	std::string what;
-	std::string why;			// hash ¾È ÇÔ
+	std::string why;			// hash ì•ˆ í•¨
 
-	bool isValid() const;			// -> °³¹ß Áß
-	inline int getTransactionLength() const;	// HashingÇÒ Transaction DataÀÇ ±æÀÌ(byte)
+	bool isValid() const;			// -> ê°œë°œ ì¤‘
+	
 
 public:
 	Transaction(std::string _who, time_t _when, std::string _what, std::string _why);
 
 	const BYTE * getTransactionData() const;
-
+	inline int getTransactionLength() const;	// Hashingí•  Transaction Dataì˜ ê¸¸ì´(byte)
 };
 
 inline int Transaction::getTransactionLength() const {

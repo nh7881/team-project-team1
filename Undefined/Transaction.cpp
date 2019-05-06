@@ -6,9 +6,9 @@ using namespace std;
 Transaction::Transaction(string _who, time_t _when, string _what, string _why) : who(_who), when(_when), what(_what), why(_why) {}
 
 
-// ¹İÈ¯µÈ Æ÷ÀÎÅÍ´Â delete[]·Î ¸Ş¸ğ¸® ÇÒ´ç ÇØÁ¦°¡ ÇÊ¿äÇÔ. transaction Á¾·ù¿¡ µû¶ó ÄÚµå ³»¿ëÀÌ ´Ş¶óÁú ¼ö ÀÖÀ½.
+// ë°˜í™˜ëœ í¬ì¸í„°ëŠ” delete[]ë¡œ ë©”ëª¨ë¦¬ í• ë‹¹ í•´ì œê°€ í•„ìš”í•¨. transaction ì¢…ë¥˜ì— ë”°ë¼ ì½”ë“œ ë‚´ìš©ì´ ë‹¬ë¼ì§ˆ ìˆ˜ ìˆìŒ.
 const BYTE * Transaction::getTransactionData() const {
-	size_t i;		// index of tx ¿ø¼Ò 
+	size_t i;		// index of tx ì›ì†Œ 
 	size_t j;		// index of who, when, what
 	size_t k = 0;	// index of transactionData
 	const BYTE * pb;
