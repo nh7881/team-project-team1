@@ -5,15 +5,16 @@ using namespace std;
 
 int main()
 {
-	Transaction * tx = new Transaction("kim", time(NULL), "book", "borrow");
+	Transaction * tx = new Transaction("kio", "book", "borrow");
+	Transaction * tx2 = new Transaction("kim", "book1", "borrow");
 	Blockchain bc(tx);
 
 	bc.addTransaction(tx);
-	bc.addTransaction(tx);
+	bc.addTransaction(tx2);
 
 	bc.printAllBlockHash();
 	bc.printAllMerkleHash();
-	//bc.printAllTransaction();
+	bc.printAllTransaction(cout);
 	//bc.printWaitingBlock();
 
 

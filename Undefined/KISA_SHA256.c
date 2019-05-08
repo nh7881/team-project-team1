@@ -209,7 +209,7 @@ void SHA256_Encrpyt( IN const BYTE *pszMessage, IN UINT uPlainTextLen, OUT BYTE 
 
 void printSHA256(const BYTE * hash) {
 	printf("0x");
-	for (int i = 0; i < 32; i++)
+	for (int i = 0; i < SHA256_DIGEST_VALUELEN; i++)
 		printf("%02x", hash[i]);
 	printf("\n");
 }

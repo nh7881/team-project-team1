@@ -21,11 +21,11 @@ void Block::mining() {
 	timestamp = time(NULL);
 
 	int i, j;
-	BYTE * buffer;
+	BYTE * blockHeader;
 	const BYTE * pb;	// pointer to transactionData
 	
-	buffer = getBlockHeader();
-	SHA256_Encrpyt(buffer, getBlockHeaderLength(), blockHash);
+	blockHeader = createBlockHeader();
+	SHA256_Encrpyt(blockHeader, getBlockHeaderLength(), blockHash);
 	
 	while (!miningSuccess()) {
 		nonce++;
@@ -33,21 +33,21 @@ void Block::mining() {
 
 		pb = (BYTE *)&nonce;
 		for (j = 0; j < sizeof(nonce); i++, j++)
-			buffer[i] = pb[j];
+			blockHeader[i] = pb[j];
 
-		SHA256_Encrpyt(buffer, getBlockHeaderLength(), blockHash);
+		SHA256_Encrpyt(blockHeader, getBlockHeaderLength(), blockHash);
 	}
 
-	delete[] buffer;
+	delete[] blockHeader;
 }
 
 // 반환된 포인터는 후에 delete[]로 할당 해제해야 함.
-BYTE * Block::getBlockHeader() const {
+BYTE * Block::createBlockHeader() const {
 	size_t i = 0;		// transactionData index
 	size_t j;			// block header index	
 	const BYTE * pb;	// pointer to transactionData
 	BYTE * buffer = new BYTE[getBlockHeaderLength()];
-
+	
 	for (j = 0; j < version.length(); i++, j++)
 		buffer[i] = version[j];
 
@@ -79,21 +79,62 @@ BYTE * Block::getBlockHeader() const {
 	return buffer;
 }
 
+bool Block::isValid() const {
+	BYTE * hash = new BYTE[SHA256_DIGEST_VALUELEN];
+	const BYTE * blockHeader = createBlockHeader();
+	SHA256_Encrpyt(blockHeader, getBlockHeaderLength(), hash);
+
+	if (memcmp(hash, blockHash, SHA256_DIGEST_VALUELEN) != 0) {
+		cout << "\n\nUnvalid block... Block Header are changed...\n";
+		delete[] hash;
+		delete[] blockHeader;
+		return false;
+	}
+	else {
+		delete[] hash;
+		delete[] blockHeader;
+		return true;
+	}
+}
+
+bool Block::transactionsAreValid() const {
+	const BYTE * merkleRoot = createMerkleRoot();
+
+	if (memcmp(merkleRoot, merkleHash, SHA256_DIGEST_VALUELEN) != 0) {
+		cout << "\n\nUnvalid transaction... Transaction Data are changed...\n";
+		delete[] merkleRoot;
+		return false;
+	}
+	else {
+		delete[] merkleRoot;
+		return true;
+	}
+}
+
 // Assertion: block에 transaction 개수 > 0
-void Block::findMerkleHash() const {
-	BYTE * hash;
+void Block::initializeMerkleHash() const {
+	const BYTE * merkleRoot = createMerkleRoot();
+
+	memcpy((void *)merkleHash, merkleRoot, SHA256_DIGEST_VALUELEN);		// Merkle tree의 root node를 merkleHash에 복사한다.
+	delete[] merkleRoot;
+}
+
+// 반환된 포인터 delete[]로 메모리 해제 필요함.	// p.s.기존 blockchain(bitcoin)과 알고리즘 다름
+const BYTE * Block::createMerkleRoot() const {
+	const BYTE * transactionData;
+	BYTE * hash = new BYTE[SHA256_DIGEST_VALUELEN];
 	vector<BYTE *> transactionHash;
 	vector<BYTE *> transactionHash2;
 	transactionHash.reserve(MAX_TRANSACTION_COUNT);
 	transactionHash2.reserve(MAX_TRANSACTION_COUNT);
 
-	// 개별 transaction을 
+	// Block에 담긴 모든 transaction을 SHA256으로 해싱한다.
 	for (size_t i = 0; i < tx.size(); i++) {
-		SHA256_Encrpyt(tx[i]->getTransactionData(), tx[i]->getTransactionLength(), hash);
-
+		transactionData = tx[i]->createTransactionData();
+		SHA256_Encrpyt(transactionData, tx[i]->getTransactionLength(), hash);
+		transactionHash.push_back(hash);
+		delete[] transactionData;
 	}
-	
-	
 
 	while (transactionHash.size() + transactionHash2.size() != 1) {
 		while (transactionHash.size() > 1)
@@ -113,21 +154,19 @@ void Block::findMerkleHash() const {
 		}
 	}
 
-	// 머클루트를 orderhash에 복사한다.
-	memcpy((void *)merkleHash, transactionHash[0], 32);
-	delete[] transactionHash[0];
+	return transactionHash[0];
 }
 
-// hashOut delete[] 필요함. _hashIn back 2개 원소를 붙인 것(64 byte)을 SHA256해서(32 byte) _hashOut에 push_back
+// 반환된 포인터 delete[]로 메모리 해제 필요함. _hashIn back 2개 원소를 붙인 것(64 byte)을 SHA256해서(32 byte) _hashOut에 push_back
 inline void Block::hashingTwoHash(vector<BYTE *> & _hashIn, vector<BYTE *> & _hashOut) const {
 	BYTE * hashIn = new BYTE[64];
-	BYTE * hashOut = new BYTE[32];
+	BYTE * hashOut = new BYTE[SHA256_DIGEST_VALUELEN];
 
-	memcpy(hashIn, _hashIn.back(), 32);
+	memcpy(hashIn, _hashIn.back(), SHA256_DIGEST_VALUELEN);
 	delete[] _hashIn.back();
 	_hashIn.pop_back();
 
-	memcpy(hashIn + 32, _hashIn.back(), 32);
+	memcpy(hashIn + SHA256_DIGEST_VALUELEN, _hashIn.back(), SHA256_DIGEST_VALUELEN);
 	delete[] _hashIn.back();
 	_hashIn.pop_back();
 
@@ -136,21 +175,9 @@ inline void Block::hashingTwoHash(vector<BYTE *> & _hashIn, vector<BYTE *> & _ha
 	_hashOut.push_back(hashOut);
 }
 
-bool Block::isValid() const {
-	BYTE * hash;
-	BYTE * blockHeader = getBlockHeader();
-	SHA256_Encrpyt(blockHeader, getBlockHeaderLength(), hash);
-	
-	if (memcmp(hash, blockHash, 32) != 0) {
-		cout << "\n\nUnvalid block... Block Header are changed...\n";
-		delete[] blockHeader;
-		return false;
-	}
-	else {
-		delete[] blockHeader;
-		return true;
-	}
-}
+
+
+
 
 
 

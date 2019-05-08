@@ -32,10 +32,10 @@ public:
 	//for debug
 	void printAllBlockHash() const;
 	void printAllMerkleHash() const;
-	void printAllTransaction() const;		// -> 개발 중
-	//void printWaitingBlock() const;		// -> 개발 중
+	void printAllTransaction(std::ostream& o) const;	// -> 개발 중	// -> printTransaction으로 변경할까?
+	//void printWaitingBlock() const;					// -> 개발 중
 
-	// tx 내용 검색 메소드					// -> 개발 중
+	// tx 내용 검색 메소드								// -> 개발 중
 	
 };
 

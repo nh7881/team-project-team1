@@ -3,6 +3,7 @@
 #include <fstream>
 #include <cstdint>
 #include <iomanip>
+#include <cstdint>
 #include "BlockChain.h"
 #include "Block.h"
 #include "Transaction.h"
@@ -12,7 +13,7 @@ uint64_t Blockchain::blockCount = 0;
 
 ostream & operator<<(ostream& o, const BYTE * hash) {
 	o << "0x";
-	for (int i = 0; i < 32; i++) {
+	for (int i = 0; i < SHA256_DIGEST_VALUELEN; i++) {
 		o.width(2);
 		o.fill('0');
 		o << hex << (int)hash[i];
@@ -41,9 +42,9 @@ void Blockchain::addTransaction(Transaction * _tx) {
 
 	// waiting block의 transaction이 꽉차면
 	if (waitingBlock->isFull()) {
-		waitingBlock->findMerkleHash();		// transaction으로 merkletree의 merkleroot(=merklehash) 계산
-		waitingBlock->mining();				// waiting block을 채굴
-		addBlock(waitingBlock);				// waiting block을 blockchain에 추가
+		waitingBlock->initializeMerkleHash();	// transaction으로 merkletree의 merkleroot(=merklehash) 계산
+		waitingBlock->mining();					// waiting block을 채굴
+		addBlock(waitingBlock);					// waiting block을 blockchain에 추가
 
 		Block * newWaitingBlock = new Block(lastBlock);		// new waiting block 생성
 		newWaitingBlock->tx.reserve(MAX_TRANSACTION_COUNT);	// transaction vector 크기 예약
@@ -52,10 +53,14 @@ void Blockchain::addTransaction(Transaction * _tx) {
 }
 
 void Blockchain::printAllBlockHash() const {
+	if (!lastBlock) {	// if (lastBlock == NULL)
+		cout << "\nThere is no block in the blockchain...\n\n";
+	}
+
 	const Block * presentBlock = lastBlock;
-	for (unsigned int i = 0; i < blockCount; i++) {
+	for (uint64_t i = 0; i < blockCount; i++) {
 		cout << "Block Hash: 0x";
-		for (int j = 0; j < 32; j++) {
+		for (int j = 0; j < SHA256_DIGEST_VALUELEN; j++) {
 			printf("%02x", presentBlock->blockHash[j]);
 		}
 		presentBlock = presentBlock->previousBlock;
@@ -64,10 +69,14 @@ void Blockchain::printAllBlockHash() const {
 }
 
 void Blockchain::printAllMerkleHash() const {
+	if (!lastBlock) {	// if (lastBlock == NULL)
+		cout << "\nThere is no block in the blockchain...\n\n";
+	}
+
 	const Block * presentBlock = lastBlock;
-	for (unsigned int i = 0; i < blockCount; i++) {
+	for (uint64_t i = 0; i < blockCount; i++) {
 		cout << "Merkle Hash: 0x";
-		for (int j = 0; j < 32; j++) {
+		for (int j = 0; j < SHA256_DIGEST_VALUELEN; j++) {
 			printf("%02x", presentBlock->merkleHash[j]);
 		}
 		presentBlock = presentBlock->previousBlock;
@@ -75,7 +84,29 @@ void Blockchain::printAllMerkleHash() const {
 	}
 }
 
-// must specify numeral system(dec, hex, ...) in I/O because numeral system is often changed. 
+// Transaction 클래스 구조에 따라 아래 코드 내용이 달라질 수 있음.
+void Blockchain::printAllTransaction(ostream& o) const {
+	if (!lastBlock) {	// if (lastBlock == NULL)
+		cout << "\nThere is no block in the blockchain...\n\n";
+	}
+
+	const Block * presentBlock = lastBlock;
+	for (uint64_t i = 0; i < blockCount; i++) {
+		if (presentBlock->transactionsAreValid() && presentBlock->isValid()) {		// merkleHash와 blockHash 유효성 검사
+			size_t txSize = presentBlock->tx.size();
+			for (size_t j = 0; j < txSize; j++) {
+				o << "\nTransaction #" << j + 1 << '\n';
+				o << "Who: " << presentBlock->tx[j]->who << '\n';
+				o << "When: " << timeToString(presentBlock->tx[j]->when) << '\n';
+				o << "What: " << presentBlock->tx[j]->what << '\n';
+				o << "Why: " << presentBlock->tx[j]->why << '\n';
+			}
+			presentBlock = presentBlock->previousBlock;
+			cout << '\n';
+		}
+	}
+}
+
 void Blockchain::saveBlockchain() const {
 	time_t t = time(NULL);
 	struct tm * date = localtime(&t);
@@ -96,7 +127,7 @@ void Blockchain::saveBlockchain() const {
 		fout << "Block #" << blockCount - i - 1 << '\n';
 		fout << "Block Hash: \t\t" << presentBlock->blockHash << '\n';
 
-		if (presentBlock->previousBlock != NULL) {
+		if (presentBlock->previousBlock) {	// if (presentBlock->previousBlock != NULL)
 			fout << "Previous Block Hash: \t" << presentBlock->previousBlock->blockHash << '\n';
 		}
 		else {
@@ -108,11 +139,11 @@ void Blockchain::saveBlockchain() const {
 		fout << "Bits: " << presentBlock->bits << '\n';
 		fout << "Nonce: " << presentBlock->nonce << "\n\n";
 
-		// 아래 코드는 Transaction 클래스 구조에 따라 달라질 수 있음.
+		// Transaction 클래스 구조에 따라 아래 코드 내용이 달라질 수 있음.
 		for (unsigned int j = 0; j < MAX_TRANSACTION_COUNT; j++) {
 			fout << "Transaction #" << j + 1 << '\n';
 			fout << "who: " << presentBlock->tx[j]->who << '\n';
-			fout << "when: " << timeToString(presentBlock->tx[j]->when) << '\n'; // 날짜로 지정?
+			fout << "when: " << timeToString(presentBlock->tx[j]->when) << '\n';
 			fout << "what: " << presentBlock->tx[j]->what << '\n';
 			fout << "why: " << presentBlock->tx[j]->why << '\n';
 		}
@@ -124,15 +155,13 @@ void Blockchain::saveBlockchain() const {
 
 void Blockchain::loadBlockchain() {
 
-}
-
-void Blockchain::printAllTransaction() const {
-
 
 
 
 
 }
+
+
 
 
 const Block * Blockchain::getGenesisBlock() const {
@@ -147,7 +176,7 @@ uint64_t Blockchain::getBlockCount() const {
 	return blockCount;
 }
 
-string Blockchain::timeToString(time_t t) const {
+string Blockchain::timeToString(time_t t) const {		// -> 분, 초는 2자리 고정에 비어있는 자리는 0으로 채우기...어떻게?
 	struct tm * date = localtime(&t);
 	string result = to_string(date->tm_year + 1900) + ". " + to_string(date->tm_mon + 1) + ". " + to_string(date->tm_mday)
 		+ ". " + to_string(date->tm_hour) + ':' + to_string(date->tm_min) + ':' + to_string(date->tm_sec);

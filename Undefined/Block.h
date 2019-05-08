@@ -13,13 +13,13 @@
 class Transaction;
 
 class Block {
-	friend class Blockchain;				// Block 내용을
+	friend class Blockchain;
 
-	BYTE blockHash[32];						// Block의 ID
+	BYTE blockHash[SHA256_DIGEST_VALUELEN];	// Block의 ID
 
 	const static std::string version;		// Blockchain 이름
 	const Block * previousBlock;			// 이전 블록
-	BYTE merkleHash[32];					// 개별 transaction 해시값으로 만든 머클트리(해시트리)의 머클루트
+	BYTE merkleHash[SHA256_DIGEST_VALUELEN];// 개별 transaction 해시값으로 만든 머클트리(해시트리)의 머클루트
 	time_t timestamp;						// 블록이 블록체인에 승인된 시각
 	int bits = 2;							// blockhash 앞에 나와야 할 0의 개수(난이도 조절)
 	std::int64_t nonce;						// 임의 대입 수
@@ -27,7 +27,8 @@ class Block {
 	std::vector<const Transaction *> tx;	// Transaction
 
 	// Block class에서 사용하는 메소드
-	BYTE * getBlockHeader() const;
+	BYTE * createBlockHeader() const;
+	const BYTE * createMerkleRoot() const;
 	inline bool miningSuccess() const;
 	inline void hashingTwoHash(std::vector<BYTE *> & hash, std::vector<BYTE *> & hash2) const;
 
@@ -36,12 +37,12 @@ class Block {
 	Block(const Block * _previousBlock);
 
 	bool isValid() const;					// -> test 중
+	bool transactionsAreValid() const;		// -> test 중
 	inline bool isFull() const;
 	void mining();
-	void findMerkleHash() const;
+	void initializeMerkleHash() const;
 	inline void addTransaction(Transaction * _tx);
-	
-public:
+
 	// getter method
 	inline int getBlockHeaderLength() const;
 	inline const BYTE * getBlockHash() const;
