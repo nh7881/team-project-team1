@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <ctime>
+#include <queue>
 #include "Block.h"
 #include "Transaction.h"
 using namespace std;
@@ -84,7 +85,7 @@ bool Block::isValid() const {
 	const BYTE * blockHeader = createBlockHeader();
 	SHA256_Encrpyt(blockHeader, getBlockHeaderLength(), hash);
 
-	if (memcmp(hash, blockHash, SHA256_DIGEST_VALUELEN) != 0) {
+	if (memcmp(hash, blockHash, SHA256_DIGEST_VALUELEN)) {		// if (memcmp(hash, blockHash, SHA256_DIGEST_VALUELEN) != 0)
 		cout << "\n\nUnvalid block... Block Header are changed...\n";
 		delete[] hash;
 		delete[] blockHeader;
@@ -100,8 +101,8 @@ bool Block::isValid() const {
 bool Block::transactionsAreValid() const {
 	const BYTE * merkleRoot = createMerkleRoot();
 
-	if (memcmp(merkleRoot, merkleHash, SHA256_DIGEST_VALUELEN) != 0) {
-		cout << "\n\nUnvalid transaction... Transaction Data are changed...\n";
+	if (memcmp(merkleRoot, merkleHash, SHA256_DIGEST_VALUELEN)) {	// if (memcmp(merkleRoot, merkleHash, SHA256_DIGEST_VALUELEN) != 0)
+		cout << "\n\nUnvalid transaction... Some of Transaction Data are changed...\n";
 		delete[] merkleRoot;
 		return false;
 	}
@@ -119,10 +120,16 @@ void Block::initializeMerkleHash() const {
 	delete[] merkleRoot;
 }
 
+void Block::addTransactionsFrom(queue<Transaction *> & transactionPool) {
+	for (unsigned int i = 0; i < MAX_TRANSACTION_COUNT; i++) {
+		tx.push_back(transactionPool.front());
+		transactionPool.pop();
+	}
+}
+
 // 반환된 포인터 delete[]로 메모리 해제 필요함.	// p.s.기존 blockchain(bitcoin)과 알고리즘 다름
 const BYTE * Block::createMerkleRoot() const {
 	const BYTE * transactionData;
-	BYTE * hash = new BYTE[SHA256_DIGEST_VALUELEN];
 	vector<BYTE *> transactionHash;
 	vector<BYTE *> transactionHash2;
 	transactionHash.reserve(MAX_TRANSACTION_COUNT);
@@ -130,6 +137,7 @@ const BYTE * Block::createMerkleRoot() const {
 
 	// Block에 담긴 모든 transaction을 SHA256으로 해싱한다.
 	for (size_t i = 0; i < tx.size(); i++) {
+		BYTE * hash = new BYTE[SHA256_DIGEST_VALUELEN];
 		transactionData = tx[i]->createTransactionData();
 		SHA256_Encrpyt(transactionData, tx[i]->getTransactionLength(), hash);
 		transactionHash.push_back(hash);

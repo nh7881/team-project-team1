@@ -4,12 +4,14 @@
 #include <cstdint>
 #include <iomanip>
 #include <cstdint>
+#include <thread>
+#include <mutex>
+#include <condition_variable>
 #include "BlockChain.h"
 #include "Block.h"
 #include "Transaction.h"
 using namespace std;
 
-uint64_t Blockchain::blockCount = 0;
 
 ostream & operator<<(ostream& o, const BYTE * hash) {
 	o << "0x";
@@ -23,12 +25,12 @@ ostream & operator<<(ostream& o, const BYTE * hash) {
 }
 
 // Genesis block을 생성한다.
-Blockchain::Blockchain() {
+Blockchain::Blockchain() : blockCount(0) {
 	Block * _genesisBlock = new Block();
 	_genesisBlock->tx.reserve(MAX_TRANSACTION_COUNT);
 	genesisBlock = _genesisBlock;
-	waitingBlock = _genesisBlock;
 	lastBlock = NULL;
+	waitingBlock = _genesisBlock;
 }
 
 // Genesis block을 생성하고 그 블록에 Transaction을 추가한다.
@@ -36,25 +38,50 @@ Blockchain::Blockchain(Transaction * _tx) : Blockchain() {
 	addTransaction(_tx);
 }
 
-// waiting block에 transaction을 추가한다.
+// transaction pool에 transaction을 추가한다.
 void Blockchain::addTransaction(Transaction * _tx) {
-	waitingBlock->addTransaction(_tx);
+	//m.lock();
+	transactionPool.push(_tx);
+	//m.unlock();
+	//cv.notify_one();
 
-	// waiting block의 transaction이 꽉차면
-	if (waitingBlock->isFull()) {
+	// transactionPool에 처리되지 않은 transaction이 많으면
+	if (transactionPool.size() >= MAX_TRANSACTION_COUNT) {
+		//unique_lock<mutex> lk(m);
+		//cv.wait(lk, [&] { return !transactionPool.empty(); });
+
+		waitingBlock->addTransactionsFrom(transactionPool);
+		//lk.unlock();
+
 		waitingBlock->initializeMerkleHash();	// transaction으로 merkletree의 merkleroot(=merklehash) 계산
 		waitingBlock->mining();					// waiting block을 채굴
 		addBlock(waitingBlock);					// waiting block을 blockchain에 추가
 
-		Block * newWaitingBlock = new Block(lastBlock);		// new waiting block 생성
-		newWaitingBlock->tx.reserve(MAX_TRANSACTION_COUNT);	// transaction vector 크기 예약
+		Block * newWaitingBlock = new Block(lastBlock);
 		waitingBlock = newWaitingBlock;
 	}
 }
 
+//void Blockchain::consumeTransaction() {
+//	// waiting block의 transaction이 꽉차면
+//	while (transactionPool.size() >= MAX_TRANSACTION_COUNT) {
+//		unique_lock<mutex> lk(m);
+//		cv.wait(lk, [&] { return !transactionPool.empty(); }); // || *num_processed == 25; });
+//
+//		Block * newBlock = new Block();
+//		newBlock->addTransactionsFrom(transactionPool);
+//		lk.unlock();
+//
+//		newBlock->initializeMerkleHash();	// transaction으로 merkletree의 merkleroot(=merklehash) 계산
+//		newBlock->mining();					// waiting block을 채굴
+//		addBlock(newBlock);					// waiting block을 blockchain에 추가
+//	}	
+//}
+
 void Blockchain::printAllBlockHash() const {
 	if (!lastBlock) {	// if (lastBlock == NULL)
 		cout << "\nThere is no block in the blockchain...\n\n";
+		return;
 	}
 
 	const Block * presentBlock = lastBlock;
@@ -71,6 +98,7 @@ void Blockchain::printAllBlockHash() const {
 void Blockchain::printAllMerkleHash() const {
 	if (!lastBlock) {	// if (lastBlock == NULL)
 		cout << "\nThere is no block in the blockchain...\n\n";
+		return;
 	}
 
 	const Block * presentBlock = lastBlock;
@@ -88,6 +116,7 @@ void Blockchain::printAllMerkleHash() const {
 void Blockchain::printAllTransaction(ostream& o) const {
 	if (!lastBlock) {	// if (lastBlock == NULL)
 		cout << "\nThere is no block in the blockchain...\n\n";
+		return;
 	}
 
 	const Block * presentBlock = lastBlock;
@@ -102,7 +131,7 @@ void Blockchain::printAllTransaction(ostream& o) const {
 				o << "Why: " << presentBlock->tx[j]->why << '\n';
 			}
 			presentBlock = presentBlock->previousBlock;
-			cout << '\n';
+			o << '\n';
 		}
 	}
 }
@@ -141,7 +170,7 @@ void Blockchain::saveBlockchain() const {
 
 		// Transaction 클래스 구조에 따라 아래 코드 내용이 달라질 수 있음.
 		for (unsigned int j = 0; j < MAX_TRANSACTION_COUNT; j++) {
-			fout << "Transaction #" << j + 1 << '\n';
+			fout << "\nTransaction #" << j + 1 << '\n';
 			fout << "who: " << presentBlock->tx[j]->who << '\n';
 			fout << "when: " << timeToString(presentBlock->tx[j]->when) << '\n';
 			fout << "what: " << presentBlock->tx[j]->what << '\n';

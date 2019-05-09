@@ -1,10 +1,11 @@
 #pragma once
 #ifndef BLOCK_H
 #define BLOCK_H
-#define MAX_TRANSACTION_COUNT 1			// 한 블록에 들어갈 수 있는 최대 transaction의 개수
+#define MAX_TRANSACTION_COUNT 2			// 한 블록에 들어갈 수 있는 최대 transaction의 개수
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <queue>
 #include <string>
 #include <cstdint>
 #include <ctime>
@@ -36,12 +37,12 @@ class Block {
 	Block();
 	Block(const Block * _previousBlock);
 
-	bool isValid() const;					// -> test 중
-	bool transactionsAreValid() const;		// -> test 중
+	bool isValid() const;
+	bool transactionsAreValid() const;
 	inline bool isFull() const;
 	void mining();
 	void initializeMerkleHash() const;
-	inline void addTransaction(Transaction * _tx);
+	void addTransactionsFrom(std::queue<Transaction *> & transactionPool);
 
 	// getter method
 	inline int getBlockHeaderLength() const;
@@ -51,10 +52,6 @@ class Block {
 	inline time_t getTimestamp() const;
 	inline std::vector<const Transaction *> getTransaction() const;
 };
-
-inline void Block::addTransaction(Transaction * _tx) {
-	tx.push_back(_tx);
-}
 
 inline int Block::getBlockHeaderLength() const {
 	return version.length() + sizeof(previousBlock->blockHash) + sizeof(merkleHash) 
