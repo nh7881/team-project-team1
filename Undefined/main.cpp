@@ -5,33 +5,39 @@ using namespace std;
 
 int main()
 {
-	vector<Input> inputs;
-	vector<Output> outputs;
-	Transaction * tx = new Transaction(inputs, outputs, "Blockchain Version", "Giftcard Name", "Memo");
-	Transaction * tx2 = new Transaction("k2", "book2", "borrow2");
-	Transaction * tx3 = new Transaction("k3", "book3", "borrow3");
-	Transaction * tx4 = new Transaction("k4", "book4", "borrow4");
+	vector<Input> inputs;	// Transaction Input(송신인, 서명, 금액)
+	vector<Output> outputs;	// Transaction Output(수신인, 서명, 금액)
 
+	Input i, i2, i3;
+	Output o, o2, o3;
+	
+	inputs.push_back(i);
+	inputs.push_back(i2);
+	inputs.push_back(i3);
 
-	Blockchain bc("Giftcard 1.0", tx);
-	bc.addTransaction(tx2);
-	bc.addTransaction(tx3);
+	outputs.push_back(o);
+	outputs.push_back(o2);
+	outputs.push_back(o3);
 
-	bc.setVersion("Giftcard 1.1");
-	bc.addTransaction(tx4);
+	Transaction * tx = new Transaction(inputs, outputs, "Blockchain Version", "Giftcard Name", "Memo");		// Transaction 발생
+	Transaction * tx2 = new Transaction(inputs, outputs, "Blockchain Version", "Giftcard Name", "Memo");	// Transaction2 발생
+	Transaction * tx3 = new Transaction(inputs, outputs, "Blockchain Version", "Giftcard Name", "Memo");	// Transaction3 발생
+	Transaction * tx4 = new Transaction(inputs, outputs, "Blockchain Version", "Giftcard Name", "Memo");	// Transaction4 발생
+
+	Blockchain bc("Giftcard 1.0", tx);	// Blockchain 생성 및 거래 추가
+	bc.addTransaction(tx2);				// Blockchain에 거래 추가
+	bc.addTransaction(tx3);				// Blockchain에 거래 추가
+
+	bc.setVersion("Giftcard 1.1");		// Blockchain Version 변경
+	bc.addTransaction(tx4);				// Blockchain에 거래 추가
 
 	bc.printAllBlockHash();
 	bc.printAllMerkleHash();
 	bc.printAllTransaction(cout);
 	//bc.printWaitingBlock();
 
-	bc.saveBlockchain();
+	bc.saveBlockchain();				// Blockchain을 txt 파일로 저장(출력)
 	//bc.loadBlockchain();
-	
-
-
-
-
 
 
 	system("pause");

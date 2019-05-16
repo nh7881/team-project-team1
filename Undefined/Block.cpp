@@ -6,8 +6,6 @@
 #include "Transaction.h"
 using namespace std;
 
-//const string Block::version = "RentalRecord";
-
 Block::Block() : Block(NULL) {}
 
 // 16진수 기준 64자리의 숫자 - 0이 최대 64개 나올 수 있다.
@@ -150,18 +148,16 @@ const BYTE * Block::createMerkleRoot() const {
 	transactionHash2.reserve(MAX_TRANSACTION_COUNT);
 
 	// Block에 담긴 모든 transaction을 SHA256으로 해싱한다.
-	for (size_t i = 0; i < tx.size(); i++) {
-		BYTE * hash = new BYTE[SHA256_DIGEST_VALUELEN];
-		transactionData = tx[i]->createTransactionData();
-		SHA256_Encrpyt(transactionData, tx[i]->getTransactionLength(), hash);
-		transactionHash.push_back(hash);
-		delete[] transactionData;
-	}
+	//for (size_t i = 0; i < tx.size(); i++) {
+	//	BYTE * hash = new BYTE[SHA256_DIGEST_VALUELEN];
+	//	transactionData = tx[i]->createTransactionData();
+	//	SHA256_Encrpyt(transactionData, tx[i]->getTransactionLength(), hash);
+	//	transactionHash.push_back(hash);
+	//	delete[] transactionData;
+	//}
 
 	for (size_t i = 0; i < tx.size(); i++) {
-		
-		transactionHash.push_back(tx[i]->);
-		delete[] transactionData;
+		transactionHash.push_back(tx[i]->getTransactionHash);
 	}
 
 	while (transactionHash.size() + transactionHash2.size() != 1) {
