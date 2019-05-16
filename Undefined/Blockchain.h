@@ -3,6 +3,7 @@
 #define BLOCKCHAIN_H
 #include <cstdint>
 #include <queue>
+#include <string>
 #include <condition_variable>
 #include <mutex>
 #include "KISA_SHA256.h"
@@ -14,34 +15,40 @@ class Blockchain {
 	const Block * genesisBlock;					// 첫번째 블록
 	const Block * lastBlock;					// 마지막 블록
 	Block * waitingBlock;
-	std::queue<Transaction *> transactionPool;	// 검증을 기다리는 거래(아직 검증되지 않은 블록). Producer, Consumer의 공유 자원
+	std::queue<Transaction *> transactionPool;	// 검증을 기다리는 거래(아직 검증되지 않은 블록) //--Producer, Consumer의 공유 자원--
 	std::uint64_t blockCount;					// 블록의 총 개수
+	std::string version;
 
 	//std::mutex m;								// Transaction Producer, Consumer 관리
 	//std::condition_variable cv;				// Transaction Producer, Consumer 관리
 
 	inline void addBlock(Block * _block);
-	std::string timeToString(time_t t) const;
 
 public:
-	Blockchain();
-	Blockchain(Transaction * _tx);
+	Blockchain(std::string _version);
+	Blockchain(std::string _version, Transaction * _tx);
 
 	void addTransaction(Transaction * _tx);
 	//void consumeTransaction();	// -> 개발 중
-	void saveBlockchain() const;	// -> test 중 
-	void loadBlockchain();			// -> 개발 중
+	void saveBlockchain() const;
+	void loadBlockchain();			// -> 개발 중	// isValid와 비슷
 
 	// getter method
-	const Block * getGenesisBlock() const;
-	const Block * getLastBlock() const;
-	std::uint64_t getBlockCount() const;
+	inline const Block * getGenesisBlock() const;
+	inline const Block * getLastBlock() const;
+	inline std::uint64_t getBlockCount() const;
+	inline std::string getVersion() const;
+
+	// setter method
+	void setVersion(std::string _version);
 
 	//for debug
 	void printAllBlockHash() const;
 	void printAllMerkleHash() const;
-	void printAllTransaction(std::ostream& o) const;	// -> test 중	// -> printTransaction으로 변경할까?
+	void printAllTransaction(std::ostream& o) const;
 	//void printWaitingBlock() const;					// -> 개발 중
+
+	static std::string timeToString(time_t t);
 
 	// tx 내용 검색 메소드								// -> 개발 중
 	
@@ -51,6 +58,26 @@ public:
 inline void Blockchain::addBlock(Block * _block) {
 	lastBlock = _block;
 	blockCount++;
+}
+
+inline const Block * Blockchain::getGenesisBlock() const {
+	return genesisBlock;
+}
+
+inline const Block * Blockchain::getLastBlock() const {
+	return lastBlock;
+}
+
+inline uint64_t Blockchain::getBlockCount() const {
+	return blockCount;
+}
+
+inline std::string Blockchain::getVersion() const {
+	return std::string();
+}
+
+inline void Blockchain::setVersion(std::string _version) {
+	version = _version;
 }
 
 

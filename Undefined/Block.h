@@ -1,7 +1,8 @@
 #pragma once
 #ifndef BLOCK_H
 #define BLOCK_H
-#define MAX_TRANSACTION_COUNT 2			// 한 블록에 들어갈 수 있는 최대 transaction의 개수
+#define MAX_TRANSACTION_COUNT 1			// 한 블록에 들어갈 수 있는 최대 transaction의 개수
+#define VALID_TIMESTAMP_GAP 60
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -16,9 +17,10 @@ class Transaction;
 class Block {
 	friend class Blockchain;
 
+	std::uint64_t blockIndex;
 	BYTE blockHash[SHA256_DIGEST_VALUELEN];	// Block의 ID
 
-	const static std::string version;		// Blockchain 이름
+	std::string version;					// Blockchain 이름
 	const Block * previousBlock;			// 이전 블록
 	BYTE merkleHash[SHA256_DIGEST_VALUELEN];// 개별 transaction 해시값으로 만든 머클트리(해시트리)의 머클루트
 	time_t timestamp;						// 블록이 블록체인에 승인된 시각
@@ -51,11 +53,14 @@ class Block {
 	inline const BYTE * getMerkleHash() const;
 	inline time_t getTimestamp() const;
 	inline std::vector<const Transaction *> getTransaction() const;
+
+	// setter method
+	inline void setBits(int _bits);
 };
 
 inline int Block::getBlockHeaderLength() const {
-	return version.length() + sizeof(previousBlock->blockHash) + sizeof(merkleHash) 
-		+ sizeof(bits) + sizeof(timestamp) + sizeof(nonce);	// 12 + 32 + 32 + 4 + 8 + 8
+	return sizeof(blockIndex) + version.length() + sizeof(previousBlock->blockHash) + sizeof(merkleHash)
+		+ sizeof(bits) + sizeof(timestamp) + sizeof(nonce);	// 8 + 12 + 32 + 32 + 4 + 8 + 8
 }
 
 inline bool Block::isFull() const {
@@ -88,6 +93,10 @@ inline time_t Block::getTimestamp() const {
 
 inline std::vector<const Transaction *> Block::getTransaction() const {
 	return tx;
+}
+
+inline void Block::setBits(int _bits) {
+	bits = _bits;
 }
 
 #endif // !BLOCK_H

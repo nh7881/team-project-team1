@@ -6,31 +6,32 @@
 #include "Transaction.h"
 using namespace std;
 
-const string Block::version = "RentalRecord";
+//const string Block::version = "RentalRecord";
 
 Block::Block() : Block(NULL) {}
 
 // 16진수 기준 64자리의 숫자 - 0이 최대 64개 나올 수 있다.
 Block::Block(const Block * _previousBlock) : previousBlock(_previousBlock) {
-	// bits 값의 범위를 체크한다.
-	if (bits < 0 || bits > 32)
+	if (bits < 0 || bits > 32)	// bits 값의 범위를 체크한다.
 		cout << "error: block bits must be between 0 and 32.\n\n";
 }
 
 void Block::mining() {
 	nonce = 0;
 	timestamp = time(NULL);
+	if (previousBlock) // if(previousBlock != NULL)
+		blockIndex = previousBlock->blockIndex + 1;
+	else
+		blockIndex = 0;
+
+	BYTE * blockHeader = createBlockHeader();
+	SHA256_Encrpyt(blockHeader, getBlockHeaderLength(), blockHash);
 
 	int i, j;
-	BYTE * blockHeader;
 	const BYTE * pb;	// pointer to transactionData
-	
-	blockHeader = createBlockHeader();
-	SHA256_Encrpyt(blockHeader, getBlockHeaderLength(), blockHash);
-	
 	while (!miningSuccess()) {
 		nonce++;
-		i = version.length() + sizeof(previousBlock->blockHash)	+ sizeof(merkleHash) + sizeof(bits) + sizeof(timestamp);
+		i = sizeof(blockIndex) + version.length() + sizeof(previousBlock->blockHash)	+ sizeof(merkleHash) + sizeof(bits) + sizeof(timestamp);
 
 		pb = (BYTE *)&nonce;
 		for (j = 0; j < sizeof(nonce); i++, j++)
@@ -49,6 +50,10 @@ BYTE * Block::createBlockHeader() const {
 	const BYTE * pb;	// pointer to transactionData
 	BYTE * buffer = new BYTE[getBlockHeaderLength()];
 	
+	pb = (BYTE *)&blockIndex;
+	for (j = 0; j < sizeof(blockIndex); i++, j++)
+		buffer[i] = pb[j];
+
 	for (j = 0; j < version.length(); i++, j++)
 		buffer[i] = version[j];
 
@@ -56,8 +61,7 @@ BYTE * Block::createBlockHeader() const {
 		pb = previousBlock->blockHash;
 		for (j = 0; j < sizeof(previousBlock->blockHash); i++, j++)
 			buffer[i] = pb[j];
-	}
-	else {
+	} else {
 		for (j = 0; j < sizeof(previousBlock->blockHash); i++, j++)
 			buffer[i] = 0;
 	}
@@ -81,6 +85,18 @@ BYTE * Block::createBlockHeader() const {
 }
 
 bool Block::isValid() const {
+	if (previousBlock) {	// if (previousBlock != NULL)
+		if(previousBlock->timestamp - VALID_TIMESTAMP_GAP > timestamp) {
+			cout << "\n\n" << blockIndex << "th block timestamp is unvalid...\n";
+			return false;
+		}
+		if (previousBlock->blockIndex + 1 != blockIndex) {
+			cout << "\n\n" << blockIndex << "th block index is unvalid...\n";
+			return false;
+		}
+	}
+		
+
 	BYTE * hash = new BYTE[SHA256_DIGEST_VALUELEN];
 	const BYTE * blockHeader = createBlockHeader();
 	SHA256_Encrpyt(blockHeader, getBlockHeaderLength(), hash);
@@ -90,8 +106,7 @@ bool Block::isValid() const {
 		delete[] hash;
 		delete[] blockHeader;
 		return false;
-	}
-	else {
+	} else {
 		delete[] hash;
 		delete[] blockHeader;
 		return true;
@@ -105,8 +120,7 @@ bool Block::transactionsAreValid() const {
 		cout << "\n\nUnvalid transaction... Some of Transaction Data are changed...\n";
 		delete[] merkleRoot;
 		return false;
-	}
-	else {
+	} else {
 		delete[] merkleRoot;
 		return true;
 	}
@@ -141,6 +155,12 @@ const BYTE * Block::createMerkleRoot() const {
 		transactionData = tx[i]->createTransactionData();
 		SHA256_Encrpyt(transactionData, tx[i]->getTransactionLength(), hash);
 		transactionHash.push_back(hash);
+		delete[] transactionData;
+	}
+
+	for (size_t i = 0; i < tx.size(); i++) {
+		
+		transactionHash.push_back(tx[i]->);
 		delete[] transactionData;
 	}
 
