@@ -25,7 +25,7 @@ ostream & operator<<(ostream& o, const BYTE * hash) {
 }
 
 // Genesis block을 생성한다.
-Blockchain::Blockchain() : blockCount(0) {
+Blockchain::Blockchain(string _version) : blockCount(0), version(_version) {
 	Block * _genesisBlock = new Block();
 	_genesisBlock->tx.reserve(MAX_TRANSACTION_COUNT);
 	genesisBlock = _genesisBlock;
@@ -34,7 +34,7 @@ Blockchain::Blockchain() : blockCount(0) {
 }
 
 // Genesis block을 생성하고 그 블록에 Transaction을 추가한다.
-Blockchain::Blockchain(Transaction * _tx) : Blockchain() {
+Blockchain::Blockchain(string _version, Transaction * _tx) : Blockchain(_version) {
 	addTransaction(_tx);
 }
 
@@ -52,7 +52,8 @@ void Blockchain::addTransaction(Transaction * _tx) {
 
 		waitingBlock->addTransactionsFrom(transactionPool);
 		//lk.unlock();
-
+		
+		waitingBlock->version = version;		// 현재 blockchain version 복사
 		waitingBlock->initializeMerkleHash();	// transaction으로 merkletree의 merkleroot(=merklehash) 계산
 		waitingBlock->mining();					// waiting block을 채굴
 		addBlock(waitingBlock);					// waiting block을 blockchain에 추가
@@ -112,7 +113,6 @@ void Blockchain::printAllMerkleHash() const {
 	}
 }
 
-// Transaction 클래스 구조에 따라 아래 코드 내용이 달라질 수 있음.
 void Blockchain::printAllTransaction(ostream& o) const {
 	if (!lastBlock) {	// if (lastBlock == NULL)
 		cout << "\nThere is no block in the blockchain...\n\n";
@@ -125,13 +125,13 @@ void Blockchain::printAllTransaction(ostream& o) const {
 			size_t txSize = presentBlock->tx.size();
 			for (size_t j = 0; j < txSize; j++) {
 				o << "\nTransaction #" << j + 1 << '\n';
-				o << "Who: " << presentBlock->tx[j]->who << '\n';
-				o << "When: " << timeToString(presentBlock->tx[j]->when) << '\n';
-				o << "What: " << presentBlock->tx[j]->what << '\n';
-				o << "Why: " << presentBlock->tx[j]->why << '\n';
+				presentBlock->tx[j]->print(o);
 			}
-			presentBlock = presentBlock->previousBlock;
 			o << '\n';
+			presentBlock = presentBlock->previousBlock;
+		} else {
+			cout << "Digital forgery had occured in " << presentBlock->blockIndex << "th block...";
+			break;
 		}
 	}
 }
@@ -150,31 +150,26 @@ void Blockchain::saveBlockchain() const {
 		return;
 	}
 
-	fout << "Blockchain version: " << presentBlock->version << '\n';
+	fout << "Blockchain current version: " << presentBlock->version << '\n';
 	for (uint64_t i = 0; i < blockCount; i++) {
 		fout << "----------------------------------------------------------\n";
-		fout << "Block #" << blockCount - i - 1 << '\n';
+		fout << "Block #" << presentBlock->blockIndex << '\n';
 		fout << "Block Hash: \t\t" << presentBlock->blockHash << '\n';
-
+		
+		fout << "\nVersion: " << presentBlock->version << '\n';
 		if (presentBlock->previousBlock) {	// if (presentBlock->previousBlock != NULL)
 			fout << "Previous Block Hash: \t" << presentBlock->previousBlock->blockHash << '\n';
-		}
-		else {
+		} else {
 			fout << "Previous Block Hash: \t0x0000000000000000000000000000000000000000000000000000000000000000" << '\n';
 		}
-
 		fout << "Merkle Hash: \t\t" << presentBlock->merkleHash << '\n';
 		fout << "Timestamp: " << timeToString(presentBlock->timestamp) << '\n';
 		fout << "Bits: " << presentBlock->bits << '\n';
-		fout << "Nonce: " << presentBlock->nonce << "\n\n";
+		fout << "Nonce: " << presentBlock->nonce << '\n';
 
-		// Transaction 클래스 구조에 따라 아래 코드 내용이 달라질 수 있음.
 		for (unsigned int j = 0; j < MAX_TRANSACTION_COUNT; j++) {
 			fout << "\nTransaction #" << j + 1 << '\n';
-			fout << "who: " << presentBlock->tx[j]->who << '\n';
-			fout << "when: " << timeToString(presentBlock->tx[j]->when) << '\n';
-			fout << "what: " << presentBlock->tx[j]->what << '\n';
-			fout << "why: " << presentBlock->tx[j]->why << '\n';
+			presentBlock->tx[j]->print(fout);
 		}
 		presentBlock = presentBlock->previousBlock;
 	}
@@ -193,54 +188,16 @@ void Blockchain::loadBlockchain() {
 
 
 
-const Block * Blockchain::getGenesisBlock() const {
-	return genesisBlock;
-}
 
-const Block * Blockchain::getLastBlock() const {
-	return lastBlock;
-}
 
-uint64_t Blockchain::getBlockCount() const {
-	return blockCount;
-}
-
-string Blockchain::timeToString(time_t t) const {		// -> 분, 초는 2자리 고정에 비어있는 자리는 0으로 채우기...어떻게?
+string Blockchain::timeToString(time_t t) {		// -> 분, 초는 2자리 고정에 비어있는 자리는 0으로 채우기...어떻게?
 	struct tm * date = localtime(&t);
 	string result = to_string(date->tm_year + 1900) + ". " + to_string(date->tm_mon + 1) + ". " + to_string(date->tm_mday)
 		+ ". " + to_string(date->tm_hour) + ':' + to_string(date->tm_min) + ':' + to_string(date->tm_sec);
-	return result;
+	return result;	
 }
 
-// 블록의 모든 order 정보를 출력한다.
-//void Blockchain::print_all_order() {
-//	if (last_block == NULL) {
-//		std::cout << "There is no history of your order...\n";
-//		return;
-//	}
-//
-//	// 마지막 블록부터 첫 블록까지, 모든 블록에 대하여
-//	const Block * block = last_block;
-//	for (std::uint64_t i = num_of_block; i > 0; i--, block = block->get_previous_block()) {
-//		// 블록이 유효한 블록이면
-//		if (block->is_valid_block() && block->is_valid_order()) {
-//			std::cout << "\n\nBlockhash: ";
-//			printSHA256(block->get_blockhash());
-//			std::cout << "Orderhash: ";
-//			printSHA256(block->get_orderhash());
-//
-//			std::size_t size = block->get_order().size();
-//			// 그 블록의 모든 order를 출력
-//			for (std::int32_t j = size - 1; j > -1; j--)
-//				block->get_order()[j]->print();
-//		}
-//		// 유효하지 않으면 메세지 출력
-//		else {
-//			std::cout << "Digital forgery had occured in " << i << "th block...";
-//			break;
-//		}
-//	}
-//}
+
 //
 //// 블록의 order를 반환한다.
 //const Order * Blockchain::get_order(time_t _order_timestamp) const {
