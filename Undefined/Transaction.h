@@ -15,7 +15,10 @@ class Input {
 	BYTE previousTransactionBlockHash[SHA256_DIGEST_VALUELEN];	// hashing 안 함
 	std::uint64_t amount;										// UTXO
 
-	void setSenderPublicKey();
+public:
+	Input(BYTE & _senderPublicKey, BYTE & _previousTransactionHash, BYTE & previousTransactionBlockHash, std::uint64_t amount);
+
+	//void setSenderPublicKey();
 };
 
 class Output {
@@ -23,6 +26,9 @@ class Output {
 
 	BYTE receiverPublicKey[SHA256_DIGEST_VALUELEN];
 	std::uint64_t amount;
+
+public:
+	Output(BYTE & _senderPublicKey, BYTE & _previousTransactionHash, BYTE & previousTransactionBlockHash, std::uint64_t amount);
 };
 
 class Transaction {

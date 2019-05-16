@@ -3,13 +3,12 @@
 #define WALLET_H
 #include <vector>
 #include <cstdint>
+#include <string>
 #include "KISA_SHA256.h"
 
 class MyUTXO {
 	BYTE transactionHash[SHA256_DIGEST_VALUELEN];
 	std::uint64_t blockIndex;						// 지갑
-
-
 };
 
 
@@ -20,11 +19,10 @@ class Wallet {
 	std::vector<MyUTXO> myUTXOTable;
 
 public:
-	Wallet();
+	Wallet(std::string _passPhrase);
 
-	int getMyUTXO;
-
-
+	int getMyUTXO const;
+	void printTransactionHistory() const;
 };
 
 #endif

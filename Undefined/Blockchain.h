@@ -8,6 +8,7 @@
 #include <mutex>
 #include "KISA_SHA256.h"
 
+class Wallet;
 class Block;
 class Transaction;
 
@@ -17,7 +18,7 @@ class Blockchain {
 	Block * waitingBlock;
 	std::queue<Transaction *> transactionPool;	// 검증을 기다리는 거래(아직 검증되지 않은 블록) //--Producer, Consumer의 공유 자원--
 	std::uint64_t blockCount;					// 블록의 총 개수
-	std::string version;
+	std::string version;						// Blockchain version
 
 	//std::mutex m;								// Transaction Producer, Consumer 관리
 	//std::condition_variable cv;				// Transaction Producer, Consumer 관리
@@ -26,9 +27,9 @@ class Blockchain {
 
 public:
 	Blockchain(std::string _version);
-	Blockchain(std::string _version, Transaction * _tx);
+	Blockchain(std::string _version, Transaction * _tx);//, Wallet & _wallet);
 
-	void addTransaction(Transaction * _tx);
+	void addTransaction(Transaction * _tx);// , Wallet & _wallet);
 	//void consumeTransaction();	// -> 개발 중
 	void saveBlockchain() const;
 	void loadBlockchain();			// -> 개발 중	// isValid와 비슷
