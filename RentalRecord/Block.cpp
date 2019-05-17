@@ -94,7 +94,6 @@ bool Block::isValid() const {
 		}
 	}
 		
-
 	BYTE * hash = new BYTE[SHA256_DIGEST_VALUELEN];
 	const BYTE * blockHeader = createBlockHeader();
 	SHA256_Encrpyt(blockHeader, getBlockHeaderLength(), hash);
@@ -148,16 +147,12 @@ const BYTE * Block::createMerkleRoot() const {
 	transactionHash2.reserve(MAX_TRANSACTION_COUNT);
 
 	// Block에 담긴 모든 transaction을 SHA256으로 해싱한다.
-	//for (size_t i = 0; i < tx.size(); i++) {
-	//	BYTE * hash = new BYTE[SHA256_DIGEST_VALUELEN];
-	//	transactionData = tx[i]->createTransactionData();
-	//	SHA256_Encrpyt(transactionData, tx[i]->getTransactionLength(), hash);
-	//	transactionHash.push_back(hash);
-	//	delete[] transactionData;
-	//}
-
 	for (size_t i = 0; i < tx.size(); i++) {
-		transactionHash.push_back(tx[i]->getTransactionHash);
+		BYTE * hash = new BYTE[SHA256_DIGEST_VALUELEN];
+		transactionData = tx[i]->createTransactionData();
+		SHA256_Encrpyt(transactionData, tx[i]->getTransactionLength(), hash);
+		transactionHash.push_back(hash);
+		delete[] transactionData;
 	}
 
 	while (transactionHash.size() + transactionHash2.size() != 1) {

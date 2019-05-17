@@ -4,13 +4,12 @@
 #include <cstdint>
 #include <queue>
 #include <string>
-#include <condition_variable>
-#include <mutex>
 #include "KISA_SHA256.h"
 
 class Wallet;
 class Block;
 class Transaction;
+class UTXO;
 
 class Blockchain {
 	const Block * genesisBlock;					// 첫번째 블록
@@ -20,28 +19,27 @@ class Blockchain {
 	std::uint64_t blockCount;					// 블록의 총 개수
 	std::string version;						// Blockchain version
 
-	//std::mutex m;								// Transaction Producer, Consumer 관리
-	//std::condition_variable cv;				// Transaction Producer, Consumer 관리
-
 	inline void addBlock(Block * _block);
 
 public:
 	Blockchain(std::string _version);
-	Blockchain(std::string _version, Transaction * _tx);//, Wallet & _wallet);
+	Blockchain(std::string _version, Transaction & _tx);
 
-	void addTransaction(Transaction * _tx);// , Wallet & _wallet);
-	//void consumeTransaction();	// -> 개발 중
+	void addTransaction(Transaction & _tx);
 	void saveBlockchain() const;
-	void loadBlockchain();			// -> 개발 중	// isValid와 비슷
+	void loadBlockchain();					// -> 개발 중	// isValid와 비슷
 
 	// getter method
 	inline const Block * getGenesisBlock() const;
 	inline const Block * getLastBlock() const;
 	inline std::uint64_t getBlockCount() const;
 	inline std::string getVersion() const;
+	std::vector<UTXO> getUTXOTable() const;
+	std::vector<UTXO> getUTXOTable(const BYTE & publicKey) const;
+
 
 	// setter method
-	void setVersion(std::string _version);
+	inline void setVersion(std::string _version);
 
 	//for debug
 	void printAllBlockHash() const;

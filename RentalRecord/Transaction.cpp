@@ -6,8 +6,7 @@
 #include "Blockchain.h"
 using namespace std;
 
-Transaction(vector<Input> inputs, std::vector<Output> outputs, std::string _version, std::string _giftcardName, std::string memo)
-	: who(_who), what(_what), why(_why), timestamp(_when) {}
+Transaction::Transaction(vector<Input> & _inputs, std::vector<Output> & _outputs, string _giftcardName, string memo) {}
 
 
 // 반환된 포인터는 delete[]로 메모리 할당 해제가 필요함. Transaction 클래스 구조에 따라 아래 코드 내용이 달라질 수 있음.

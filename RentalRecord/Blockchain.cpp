@@ -4,9 +4,6 @@
 #include <cstdint>
 #include <iomanip>
 #include <cstdint>
-#include <thread>
-#include <mutex>
-#include <condition_variable>
 #include "BlockChain.h"
 #include "Block.h"
 #include "Transaction.h"
@@ -34,26 +31,18 @@ Blockchain::Blockchain(string _version) : blockCount(0), version(_version) {
 }
 
 // Genesis block을 생성하고 그 블록에 Transaction을 추가한다.
-Blockchain::Blockchain(string _version, Transaction * _tx) : Blockchain(_version) {
+Blockchain::Blockchain(string _version, Transaction & _tx) : Blockchain(_version) {
 	addTransaction(_tx);
 }
 
 // transaction pool에 transaction을 추가한다.
-void Blockchain::addTransaction(Transaction * _tx) {
-	//m.lock();
-	transactionPool.push(_tx);
-	//m.unlock();
-	//cv.notify_one();
+void Blockchain::addTransaction(Transaction & _tx) {
+	transactionPool.push(&_tx);
 
 	// transactionPool에 처리되지 않은 transaction이 많으면
 	if (transactionPool.size() >= MAX_TRANSACTION_COUNT) {
-		//unique_lock<mutex> lk(m);
-		//cv.wait(lk, [&] { return !transactionPool.empty(); });
-
-		waitingBlock->addTransactionsFrom(transactionPool);
-		//lk.unlock();
-		
 		waitingBlock->version = version;		// 현재 blockchain version 복사
+		waitingBlock->addTransactionsFrom(transactionPool);		
 		waitingBlock->initializeMerkleHash();	// transaction으로 merkletree의 merkleroot(=merklehash) 계산
 		waitingBlock->mining();					// waiting block을 채굴
 		addBlock(waitingBlock);					// waiting block을 blockchain에 추가
@@ -62,22 +51,6 @@ void Blockchain::addTransaction(Transaction * _tx) {
 		waitingBlock = newWaitingBlock;
 	}
 }
-
-//void Blockchain::consumeTransaction() {
-//	// waiting block의 transaction이 꽉차면
-//	while (transactionPool.size() >= MAX_TRANSACTION_COUNT) {
-//		unique_lock<mutex> lk(m);
-//		cv.wait(lk, [&] { return !transactionPool.empty(); }); // || *num_processed == 25; });
-//
-//		Block * newBlock = new Block();
-//		newBlock->addTransactionsFrom(transactionPool);
-//		lk.unlock();
-//
-//		newBlock->initializeMerkleHash();	// transaction으로 merkletree의 merkleroot(=merklehash) 계산
-//		newBlock->mining();					// waiting block을 채굴
-//		addBlock(newBlock);					// waiting block을 blockchain에 추가
-//	}	
-//}
 
 void Blockchain::printAllBlockHash() const {
 	if (!lastBlock) {	// if (lastBlock == NULL)
