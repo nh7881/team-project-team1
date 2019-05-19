@@ -8,9 +8,9 @@
   Wallet w(string passPhrase);
 
   // 거래 구성 요소인 inputs(생략 가능)과 outputs, 전송 금액, 받는 사람 PublicKey를 작성한다.
-  w.setInputsOuputs(vector<Output> & outputs, uint64_t sendingAmount, const BYTE * receiverPublicKey);
-  w.setInputsOuputs(vector<Input> & inputs, vector<Output> & outputs, uint64_t sendingAmount, 
-    const BYTE * receiverPublicKey);
+  w.setInputsOuputs(uint64_t sendingAmount, const BYTE * receiverPublicKey, vector<Output> & outputs);
+  w.setInputsOuputs(uint64_t sendingAmount, const BYTE * receiverPublicKey, vector<Input> & inputs,
+    vector<Output> & outputs);
 
 
   /* ----------- Wallet Node와 Blockchain Node 간의 통신 ----------- */
