@@ -17,7 +17,7 @@ class Transaction;
 class Block {
 	friend class Blockchain;
 
-	std::uint64_t blockIndex;
+	std::uint64_t blockIndex;				// Block의 높이
 	BYTE blockHash[SHA256_DIGEST_VALUELEN];	// Block의 ID
 
 	std::string version;					// Blockchain 이름
@@ -27,10 +27,10 @@ class Block {
 	int bits = 2;							// blockhash 앞에 나와야 할 0의 개수(난이도 조절)
 	std::int64_t nonce;						// 임의 대입 수
 
-	std::vector<Transaction *> tx;			// Transaction
+	std::vector<Transaction *> transactions;// Transaction
 
 	// Block class에서 사용하는 메소드
-	BYTE * createBlockHeader() const;
+	BYTE * createBlockHeader() const;		// <- test 필요
 	const BYTE * createMerkleRoot() const;
 	inline bool miningSuccess() const;
 	inline void hashingTwoHash(std::vector<BYTE *> & hash, std::vector<BYTE *> & hash2) const;
@@ -42,31 +42,31 @@ class Block {
 	bool isValid() const;
 	bool transactionsAreValid() const;
 	inline bool isFull() const;
-	void mining();
+	void mining();							// <- test 필요
 	void initializeMerkleHash() const;
 	void addTransactionsFrom(std::queue<Transaction *> & transactionPool);
 
 	static bool isMemoryEqual(const void * a, const void * b, size_t size);	// Assertion: size는 4의 양의 배수
 
 	// getter method
-	inline int getBlockHeaderLength() const;
+	inline int getBlockHeaderSize() const;
 	inline const BYTE * getBlockHash() const;
 	inline const Block * getPreviousBlock() const;
 	inline const BYTE * getMerkleHash() const;
 	inline time_t getTimestamp() const;
-	inline std::vector<Transaction *> getTransaction() const;
+	inline std::vector<Transaction *> getTransactions() const;
 
 	// setter method
 	inline void setBits(int _bits);
 };
 
-inline int Block::getBlockHeaderLength() const {
+inline int Block::getBlockHeaderSize() const {
 	return sizeof(blockIndex) + version.length() + sizeof(previousBlock->blockHash) + sizeof(merkleHash)
 		+ sizeof(bits) + sizeof(timestamp) + sizeof(nonce);	// 8 + 12 + 32 + 32 + 4 + 8 + 8
 }
 
 inline bool Block::isFull() const {
-	return tx.size() >= MAX_TRANSACTION_COUNT ? true : false;
+	return transactions.size() >= MAX_TRANSACTION_COUNT ? true : false;
 }
 
 inline bool Block::miningSuccess() const {
@@ -93,8 +93,8 @@ inline time_t Block::getTimestamp() const {
 	return timestamp;
 }
 
-inline std::vector<Transaction *> Block::getTransaction() const {
-	return tx;
+inline std::vector<Transaction *> Block::getTransactions() const {
+	return transactions;
 }
 
 inline void Block::setBits(int _bits) {

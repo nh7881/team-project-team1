@@ -21,10 +21,10 @@ Wallet::Wallet(std::string _passPhrase) {
 	SHA256_Encrpyt(privateKey, SHA256_DIGEST_VALUELEN, publicKey);
 }
 
-Transaction * Wallet::createTransaction(std::vector<Input>& inputs, std::vector<Output>& outputs, std::string giftcardName, std::string memo) const {
-	
+inline void Wallet::printMyUTXOTable() const
+{
+}
 
-
-
-	return nullptr;
+void Wallet::printUTXOTable() const
+{
 }

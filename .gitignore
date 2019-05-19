@@ -37,3 +37,6 @@
 *.filters
 *.user
 *.vcxproj
+*.tlog
+*.pdb
+*.log

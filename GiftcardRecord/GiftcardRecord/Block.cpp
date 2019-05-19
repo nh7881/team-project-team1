@@ -21,21 +21,26 @@ void Block::mining() {
 		blockIndex = previousBlock->blockIndex + 1;
 	else
 		blockIndex = 0;
-
+	
+	for (Transaction * tx : transactions) {
+		tx->setIncludedBlockIndex(blockIndex);
+	}
+	
 	BYTE * blockHeader = createBlockHeader();
-	SHA256_Encrpyt(blockHeader, getBlockHeaderLength(), blockHash);
+	SHA256_Encrpyt(blockHeader, getBlockHeaderSize(), blockHash);
 
-	int i, j;
-	const BYTE * pb;	// pointer to transactionData
+	int i = sizeof(blockIndex) + version.length() + sizeof(previousBlock->blockHash) + sizeof(merkleHash) + sizeof(bits) + sizeof(timestamp);
+	//const BYTE * pb;	// pointer to transactionData
 	while (!miningSuccess()) {
 		nonce++;
-		i = sizeof(blockIndex) + version.length() + sizeof(previousBlock->blockHash)	+ sizeof(merkleHash) + sizeof(bits) + sizeof(timestamp);
 
-		pb = (BYTE *)&nonce;
-		for (j = 0; j < sizeof(nonce); i++, j++)
-			blockHeader[i] = pb[j];
+		//pb = (BYTE *)&nonce;
+		//for (j = 0; j < sizeof(nonce); i++, j++)
+		//	blockHeader[i] = pb[j];
 
-		SHA256_Encrpyt(blockHeader, getBlockHeaderLength(), blockHash);
+		memcpy(blockHeader + i, &nonce, sizeof(nonce));
+
+		SHA256_Encrpyt(blockHeader, getBlockHeaderSize(), blockHash);
 	}
 
 	delete[] blockHeader;
@@ -43,43 +48,71 @@ void Block::mining() {
 
 // 반환된 포인터는 후에 delete[]로 할당 해제해야 함.
 BYTE * Block::createBlockHeader() const {
-	size_t i = 0;		// transactionData index
-	size_t j;			// block header index	
-	const BYTE * pb;	// pointer to transactionData
-	BYTE * buffer = new BYTE[getBlockHeaderLength()];
-	
-	pb = (BYTE *)&blockIndex;
-	for (j = 0; j < sizeof(blockIndex); i++, j++)
-		buffer[i] = pb[j];
+	int i = 0;			// transactionData index
+	//size_t j;			// block header index	
+	//const BYTE * pb;	// pointer to transactionData
+	BYTE * blockHeader = new BYTE[getBlockHeaderSize()];
 
-	for (j = 0; j < version.length(); i++, j++)
-		buffer[i] = version[j];
+	memcpy(blockHeader + i, &blockIndex, sizeof(blockIndex));
+	i += sizeof(blockIndex);
 
-	if (previousBlock != NULL) {
-		pb = previousBlock->blockHash;
-		for (j = 0; j < sizeof(previousBlock->blockHash); i++, j++)
-			buffer[i] = pb[j];
-	} else {
-		for (j = 0; j < sizeof(previousBlock->blockHash); i++, j++)
-			buffer[i] = 0;
+	memcpy(blockHeader + i, version.c_str(), version.length());
+	i += version.length();
+
+	if (previousBlock) {	// if (previousBlock != NULL)
+		memcpy(blockHeader + i, previousBlock->blockHash, sizeof(previousBlock->blockHash));
+		i += sizeof(previousBlock->blockHash);
+	}
+	else {
+		memcpy(blockHeader + i, previousBlock, sizeof(previousBlock));
+		i += sizeof(previousBlock->blockHash);
 	}
 
-	for (j = 0; j < sizeof(merkleHash); i++, j++)
-		buffer[i] = merkleHash[j];
+	memcpy(blockHeader + i, merkleHash, sizeof(merkleHash));
+	i += sizeof(merkleHash);
 
-	pb = (BYTE *)&bits;
-	for (j = 0; j < sizeof(bits); i++, j++)
-		buffer[i] = pb[j];
+	memcpy(blockHeader + i, &bits, sizeof(bits));
+	i += sizeof(bits);
 
-	pb = (BYTE *)&timestamp;
-	for (j = 0; j < sizeof(timestamp); i++, j++)
-		buffer[i] = pb[j];
+	memcpy(blockHeader + i, &timestamp, sizeof(timestamp));
+	i += sizeof(timestamp);
 
-	pb = (BYTE *)&nonce;
-	for (j = 0; j < sizeof(nonce); i++, j++)
-		buffer[i] = pb[j];
+	memcpy(blockHeader + i, &nonce, sizeof(nonce));
+	i += sizeof(nonce);
 
-	return buffer;
+	//pb = (BYTE *)&blockIndex;
+	//for (j = 0; j < sizeof(blockIndex); i++, j++)
+	//	buffer[i] = pb[j];
+
+	//for (j = 0; j < version.length(); i++, j++)
+	//	buffer[i] = version[j];
+
+	//if (previousBlock != NULL) {
+	//	pb = previousBlock->blockHash;
+	//	for (j = 0; j < sizeof(previousBlock->blockHash); i++, j++)
+	//		buffer[i] = pb[j];
+	//}
+	//else {
+	//	for (j = 0; j < sizeof(previousBlock->blockHash); i++, j++)
+	//		buffer[i] = 0;
+	//}
+
+	//for (j = 0; j < sizeof(merkleHash); i++, j++)
+	//	buffer[i] = merkleHash[j];
+
+	//pb = (BYTE *)&bits;
+	//for (j = 0; j < sizeof(bits); i++, j++)
+	//	buffer[i] = pb[j];
+
+	//pb = (BYTE *)&timestamp;
+	//for (j = 0; j < sizeof(timestamp); i++, j++)
+	//	buffer[i] = pb[j];
+
+	//pb = (BYTE *)&nonce;
+	//for (j = 0; j < sizeof(nonce); i++, j++)
+	//	buffer[i] = pb[j];
+
+	return blockHeader;
 }
 
 bool Block::isValid() const {
@@ -96,7 +129,7 @@ bool Block::isValid() const {
 		
 	BYTE * hash = new BYTE[SHA256_DIGEST_VALUELEN];
 	const BYTE * blockHeader = createBlockHeader();
-	SHA256_Encrpyt(blockHeader, getBlockHeaderLength(), hash);
+	SHA256_Encrpyt(blockHeader, getBlockHeaderSize(), hash);
 
 	if (Block::isMemoryEqual(hash, blockHash, SHA256_DIGEST_VALUELEN)) {
 		cout << "\n\nUnvalid block... Block Header are changed...\n";
@@ -133,7 +166,7 @@ void Block::initializeMerkleHash() const {
 
 void Block::addTransactionsFrom(queue<Transaction *> & transactionPool) {
 	for (unsigned int i = 0; i < MAX_TRANSACTION_COUNT; i++) {
-		tx.push_back(transactionPool.front());
+		transactions.push_back(transactionPool.front());
 		transactionPool.pop();
 	}
 }
@@ -154,39 +187,45 @@ bool Block::isMemoryEqual(const void * a, const void * b, size_t byteSize) {
 
 // 반환된 포인터 delete[]로 메모리 해제 필요함.	// p.s.기존 blockchain(bitcoin)과 알고리즘 다름
 const BYTE * Block::createMerkleRoot() const {
-	vector<BYTE *> transactionHash;
-	vector<BYTE *> transactionHash2;
-	transactionHash.reserve(MAX_TRANSACTION_COUNT);
-	transactionHash2.reserve(MAX_TRANSACTION_COUNT);
+	vector<BYTE *> txHashes;
+	vector<BYTE *> txHashes2;
+	txHashes.reserve(MAX_TRANSACTION_COUNT);
+	txHashes2.reserve(MAX_TRANSACTION_COUNT);
 
 	// Block에 담긴 모든 transaction을 SHA256으로 해싱한다.
-	for (size_t i = 0; i < tx.size(); i++) {
-		BYTE * hash = new BYTE[SHA256_DIGEST_VALUELEN];
-		const BYTE * transactionData = tx[i]->createTransactionData();
-		SHA256_Encrpyt(transactionData, tx[i]->getTransactionLength(), hash);
-		transactionHash.push_back(hash);
-		delete[] transactionData;
+	//for (size_t i = 0; i < transactions.size(); i++) {
+	//	BYTE * hash = new BYTE[SHA256_DIGEST_VALUELEN];
+	//	const BYTE * transactionData = transactions[i]->createTransactionData();
+	//	SHA256_Encrpyt(transactionData, transactions[i]->getTransactionLength(), hash);
+	//	transactionHash.push_back(hash);
+	//	delete[] transactionData;
+	//}
+
+	for (Transaction * tx : transactions) {
+		BYTE * txHash = new BYTE[SHA256_DIGEST_VALUELEN];
+		memcpy(txHash, tx->getTransactionHash(), SHA256_DIGEST_VALUELEN);
+		txHashes.push_back(txHash);
 	}
 
-	while (transactionHash.size() + transactionHash2.size() != 1) {
-		while (transactionHash.size() > 1)
-			hashingTwoHash(transactionHash, transactionHash2);
+	while (txHashes.size() + txHashes2.size() != 1) {
+		while (txHashes.size() > 1)
+			hashingTwoHash(txHashes, txHashes2);
 
-		if (transactionHash.size() == 1) {
-			transactionHash2.push_back(transactionHash[0]);
-			transactionHash.pop_back();
+		if (txHashes.size() == 1) {
+			txHashes2.push_back(txHashes[0]);
+			txHashes.pop_back();
 		}
 
-		while (transactionHash2.size() > 1)
-			hashingTwoHash(transactionHash2, transactionHash);
+		while (txHashes2.size() > 1)
+			hashingTwoHash(txHashes2, txHashes);
 
-		if (transactionHash2.size() == 1) {
-			transactionHash.push_back(transactionHash2[0]);
-			transactionHash2.pop_back();
+		if (txHashes2.size() == 1) {
+			txHashes.push_back(txHashes2[0]);
+			txHashes2.pop_back();
 		}
 	}
 
-	return transactionHash[0];
+	return txHashes[0];
 }
 
 // 반환된 포인터 delete[]로 메모리 해제 필요함. _hashIn back 2개 원소를 붙인 것(64 byte)을 SHA256해서(32 byte) _hashOut에 push_back

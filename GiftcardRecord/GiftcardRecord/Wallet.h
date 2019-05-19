@@ -15,6 +15,10 @@ public:
 	UTXO(const BYTE * txHash, std::uint64_t blockIndex);
 	void print() const;
 
+	// getter method
+	const BYTE * getTransactionHash() const;
+	std::uint64_t getBlockIndex() const;
+
 	void setTransactionHash(const BYTE * _transactionHash);
 	void setBlockIndex(std::uint64_t _blockIndex);
 };
@@ -68,6 +72,7 @@ inline void Wallet::setMyUTXOTable(std::vector<UTXO> & _myUTXOTable) {
 inline void Wallet::setUTXOTable(std::vector<UTXO> & _utxoTable) {
 	utxoTable = _utxoTable;
 }
+
 
 
 #endif

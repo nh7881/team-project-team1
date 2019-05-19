@@ -25,7 +25,7 @@ ostream & operator<<(ostream& o, const BYTE * hash) {
 // Genesis block을 생성한다.
 Blockchain::Blockchain(string _version) : blockCount(0), version(_version) {
 	Block * _genesisBlock = new Block();
-	_genesisBlock->tx.reserve(MAX_TRANSACTION_COUNT);
+	_genesisBlock->transactions.reserve(MAX_TRANSACTION_COUNT);
 	genesisBlock = _genesisBlock;
 	lastBlock = NULL;
 	waitingBlock = _genesisBlock;
@@ -96,10 +96,10 @@ void Blockchain::printAllTransaction(ostream& o) const {
 	const Block * presentBlock = lastBlock;
 	for (uint64_t i = 0; i < blockCount; i++) {
 		if (presentBlock->transactionsAreValid() && presentBlock->isValid()) {		// merkleHash와 blockHash 유효성 검사
-			size_t txSize = presentBlock->tx.size();
+			size_t txSize = presentBlock->transactions.size();
 			for (size_t j = 0; j < txSize; j++) {
 				o << "\nTransaction #" << j + 1 << '\n';
-				presentBlock->tx[j]->print(o);
+				presentBlock->transactions[j]->print(o);
 			}
 			o << '\n';
 			presentBlock = presentBlock->previousBlock;
@@ -143,7 +143,7 @@ void Blockchain::saveBlockchain() const {
 
 		for (unsigned int j = 0; j < MAX_TRANSACTION_COUNT; j++) {
 			fout << "\nTransaction #" << j + 1 << '\n';
-			presentBlock->tx[j]->print(fout);
+			presentBlock->transactions[j]->print(fout);
 		}
 		presentBlock = presentBlock->previousBlock;
 	}
@@ -153,20 +153,15 @@ void Blockchain::saveBlockchain() const {
 
 vector<UTXO> Blockchain::getUTXOTable(const BYTE * _publicKey) const {
 	vector<Transaction *> myTransactions;
-	vector<uint64_t> blockIndex;
 	
 	const Block * presentBlock = lastBlock;
-	Transaction * tx;
 
 	// 블록체인에서 Transaction의 receiverPublicKey가 _publicKey인 Transaction을 찾는다.
 	for (uint64_t i = 0; i < blockCount; i++) {
-		for (int j = 0; j < MAX_TRANSACTION_COUNT; j++) {
-			tx = presentBlock->getTransaction()[j];
-
+		for (Transaction * tx : presentBlock->getTransactions()) {
 			for (const Output output : tx->getOutputs()) {
 				if (Block::isMemoryEqual((void *)_publicKey, (void *)output.getReceiverPublicKey(), SHA256_DIGEST_VALUELEN)) {
 					myTransactions.push_back(tx);
-					blockIndex.push_back(presentBlock->blockIndex);
 					break;
 				}
 			}
@@ -174,25 +169,22 @@ vector<UTXO> Blockchain::getUTXOTable(const BYTE * _publicKey) const {
 		presentBlock = presentBlock->previousBlock;
 	}
 
-	// 참조되지 않은 Transaction만 찾는다. O(n^2) - n은 myTXOSize.
+	// 모든 Transaction에 대해 참조되지 않은 Transaction만 찾는다. O(n^2) - n은 myTXOSize.
 	vector<UTXO> myUTXOTable;
 	size_t myTxIndex = 0;
 	UTXO myUTXO;
 	for (const Transaction * myTx : myTransactions) {
-		const BYTE * myTxHash = myTx->getTransactionHash();
-
-		// 모든 Transaction을 검사하면서 해당 Transaction이 참조됐는지 확인한다.
 		for (const Transaction * myTx2 : myTransactions) {
 			for (const Input input : myTx2->getInputs()) {
-				if (Block::isMemoryEqual((void *)input.getPreviousTransactionHash(), (void *)myTxHash, SHA256_DIGEST_VALUELEN)) {
+				if (Block::isMemoryEqual((void *)input.getPreviousTransactionHash(), (void *)myTx->getTransactionHash(), SHA256_DIGEST_VALUELEN)) {
 					goto REFERENCED_TX;
 				}
 			}
 		}
 
 		// 참조되지 않은 Transaction만 myUTXOTable에 넣는다.
-		myUTXO.setTransactionHash(myTxHash);
-		myUTXO.setBlockIndex(blockIndex[myTxIndex]);
+		myUTXO.setTransactionHash(myTx->getTransactionHash());
+		myUTXO.setBlockIndex(myTx->getBlockIndex());
 		myUTXOTable.push_back(myUTXO);
 
 		// 참조된 Transaction은 건너 뛴다.

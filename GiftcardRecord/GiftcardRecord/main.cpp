@@ -6,16 +6,46 @@ using namespace std;
 
 int main()
 {
-	// 블록체인 노드
+	//---------------------- Test ---------------------
+	vector<Input> inputs_;
+	vector<Output> outputs_;
+	Transaction * tx_ = new Transaction(inputs_, outputs_, "Giftcard Name", "Memo");
+	Transaction * tx2_ = new Transaction(inputs_, outputs_, "Giftcard Name2", "Memo2");
+	Transaction * tx3_ = new Transaction(inputs_, outputs_, "Giftcard Name3", "Memo3");
+	Transaction * tx4_ = new Transaction(inputs_, outputs_, "Giftcard Name4", "Memo4");
+
+	Blockchain bc_("Giftcard 1.0", tx_);
+	bc_.addTransaction(tx2_);
+
+	bc_.setVersion("Giftcard 1.1");
+	bc_.addTransaction(tx3_);
+	bc_.addTransaction(tx4_);
+
+
+	bc_.printAllBlockHash();
+	bc_.printAllMerkleHash();
+	bc_.printAllTransaction(cout);
+	//bc.printWaitingBlock();
+
+	bc_.saveBlockchain();				// Blockchain을 txt 파일로 저장(출력)
+	//bc.loadBlockchain();
+
+
+
+
+
+
+	//---------------------- 노드 생성 ----------------------
+	/* 블록체인 노드 */
 	Blockchain bc("Giftcard 1.0");		// Blockchain 생성 및 거래 추가
 
-	// 상품권 구매자
+	/* 상품권 구매자 */
 	Wallet w1("giftcard buyer pass phrase");		// 사용자 지갑 생성
 
-	// 상품권 판매자
+	/* 상품권 판매자 */
 	Wallet w2("giftcard seller pass phrase");
 
-	// 블록체인 채굴자
+	/* 블록체인 채굴자 */
 	Wallet w3("blockchain miner pass phrase");
 
 
@@ -109,17 +139,6 @@ int main()
 
 
 
-	//-----------------------------------------------------
-	
-	bc.setVersion("Giftcard 1.1");		// Blockchain Version 변경
-
-	bc.printAllBlockHash();
-	bc.printAllMerkleHash();
-	bc.printAllTransaction(cout);
-	//bc.printWaitingBlock();
-
-	bc.saveBlockchain();				// Blockchain을 txt 파일로 저장(출력)
-	//bc.loadBlockchain();
 
 
 	system("pause");
