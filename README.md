@@ -1,4 +1,4 @@
-# 상품권 블록체인
+# Giftcard Record
 
 ## Wallet Node Interface 
 ```c++
