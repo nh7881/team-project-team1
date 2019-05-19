@@ -27,7 +27,7 @@
 
 
 # Blockchain Node Interface
-'''python
+```c++
   /* Blockchain Node 내부 동작 */
   
   // Blockchain 생성
@@ -49,7 +49,7 @@
   // Wallet Node가 private key와 transaction을 주며 거래 채굴을 요청할 시 transaction이 유효한지 검증하고 블록체인에 추가한다.
   if(tx->isValid(wallet.getPrivateKey()))
       void addTransaction(Transaction * tx);
-'''
+```
 
 
   
