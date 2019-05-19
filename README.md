@@ -27,7 +27,7 @@
 
 
 # Blockchain Node Interface
-'''c++
+'''c
   /* Blockchain Node 내부 동작 */
   
   // Blockchain 생성
