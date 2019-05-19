@@ -1,6 +1,6 @@
-## 상품권 블록체인
+# 상품권 블록체인
 
-# Wallet Node Interface 
+## Wallet Node Interface 
 ```c++
   /* Wallet Node 내부 동작 */
   
@@ -27,7 +27,7 @@
   Transaction * tx = new Transaction(inputs, outputs, "Giftcard Name", "Memo");
 ```
 
-# Blockchain Node Interface
+## Blockchain Node Interface
 ```c++
   /* Blockchain Node 내부 동작 */
   
