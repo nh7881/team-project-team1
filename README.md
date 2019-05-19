@@ -2,7 +2,7 @@
 
 ## Wallet Node Interface 
 ```c++
-  /* Wallet Node 내부 동작 */
+  /* ----------- Wallet Node 내부 Interface ----------- */
   
   // pass phrase를 입력해 Wallet 생성
   Wallet(std::string passPhrase);
@@ -14,7 +14,7 @@
     std::uint64_t sendingAmount, const BYTE * receiverPublicKey);
 
 
-  /* Wallet Node와 Blockchain Node 간의 통신 */
+  /* ----------- Wallet Node와 Blockchain Node 간의 통신 ----------- */
 
   // Blockchain Node에게 UTXO Table을 요청하고, Blockchain Node로부터 UTXO Table을 받는다.
   // 그 후 자신의 UTXO Table을 갱신한다.
@@ -31,17 +31,20 @@
 
 ## Blockchain Node Interface
 ```c++
-  /* Blockchain Node 내부 동작 */
+  /* ----------- Blockchain Node 내부 Interface ----------- */
   
   // Blockchain 생성
   Blockchain(std::string version);
   Blockchain(std::string version, Transaction * tx);
 
+  // Blockchain version 변경
   void setVersion(std::string version);
+
+  // Blockchain 내용을 .txt 파일로 저장
   void saveBlockchain() const;
   
   
-  /* Wallet Node와 Blockchain Node 간의 통신 */
+  /* ----------- Wallet Node와 Blockchain Node 간의 통신 ----------- */
   
   // Wallet Node가 UTXO Table을 요청할 시 Wallet Node에게 반환된 값을 전송한다.
   std::vector<UTXO> getUTXOTable() const;
