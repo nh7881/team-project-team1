@@ -6,7 +6,26 @@
 #include "Blockchain.h"
 using namespace std;
 
-Transaction::Transaction(vector<Input> & _inputs, std::vector<Output> & _outputs, string _giftcardName, string memo) {}
+// Assertion: parameter로 32byte의 문자열 입력
+Input::Input(const BYTE * _senderPrivateKey, std::uint64_t _amount, const BYTE * _previousTransactionHash) : amount(_amount) {
+	SHA256_Encrpyt(_senderPrivateKey, SHA256_DIGEST_VALUELEN, senderPublicKey);
+	memcpy(previousTransactionHash, _previousTransactionHash, SHA256_DIGEST_VALUELEN);
+}
+
+
+
+// Assertion: parameter로 32byte의 문자열 입력
+Output::Output(const BYTE * _receiverPublicKey, std::uint64_t _amount) : amount(_amount) {
+	memcpy(receiverPublicKey, _receiverPublicKey, SHA256_DIGEST_VALUELEN);
+}
+
+
+
+Transaction::Transaction(std::vector<Output> & _outputs, std::string _giftcardName, std::string _memo) 
+	: outputs(_outputs), giftcardName(_giftcardName), memo(_memo) {}
+
+Transaction::Transaction(vector<Input> & _inputs, std::vector<Output> & _outputs, string _giftcardName, string _memo) 
+	: inputs(_inputs), outputs(_outputs), giftcardName(_giftcardName), memo(_memo) {}
 
 
 // 반환된 포인터는 delete[]로 메모리 할당 해제가 필요함. Transaction 클래스 구조에 따라 아래 코드 내용이 달라질 수 있음.

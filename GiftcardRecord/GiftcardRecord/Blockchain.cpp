@@ -7,6 +7,7 @@
 #include "BlockChain.h"
 #include "Block.h"
 #include "Transaction.h"
+#include "Wallet.h"
 using namespace std;
 
 
@@ -31,13 +32,13 @@ Blockchain::Blockchain(string _version) : blockCount(0), version(_version) {
 }
 
 // Genesis block을 생성하고 그 블록에 Transaction을 추가한다.
-Blockchain::Blockchain(string _version, Transaction & _tx) : Blockchain(_version) {
+Blockchain::Blockchain(string _version, Transaction * _tx) : Blockchain(_version) {
 	addTransaction(_tx);
 }
 
 // transaction pool에 transaction을 추가한다.
-void Blockchain::addTransaction(Transaction & _tx) {
-	transactionPool.push(&_tx);
+void Blockchain::addTransaction(Transaction * _tx) {
+	transactionPool.push(_tx);
 
 	// transactionPool에 처리되지 않은 transaction이 많으면
 	if (transactionPool.size() >= MAX_TRANSACTION_COUNT) {
@@ -150,17 +151,57 @@ void Blockchain::saveBlockchain() const {
 	cout << "\n\nFile write complete!\n";
 }
 
-void Blockchain::loadBlockchain() {
+vector<UTXO> Blockchain::getUTXOTable(const BYTE * _publicKey) const {
+	vector<Transaction *> myTransactions;
+	vector<uint64_t> blockIndex;
+	
+	const Block * presentBlock = lastBlock;
+	Transaction * tx;
 
+	// 블록체인에서 Transaction의 receiverPublicKey가 _publicKey인 Transaction을 찾는다.
+	for (uint64_t i = 0; i < blockCount; i++) {
+		for (int j = 0; j < MAX_TRANSACTION_COUNT; j++) {
+			tx = presentBlock->getTransaction()[j];
 
+			for (const Output output : tx->getOutputs()) {
+				if (Block::isMemoryEqual((void *)_publicKey, (void *)output.getReceiverPublicKey(), SHA256_DIGEST_VALUELEN)) {
+					myTransactions.push_back(tx);
+					blockIndex.push_back(presentBlock->blockIndex);
+					break;
+				}
+			}
+		}
+		presentBlock = presentBlock->previousBlock;
+	}
 
+	// 참조되지 않은 Transaction만 찾는다. O(n^2) - n은 myTXOSize.
+	vector<UTXO> myUTXOTable;
+	size_t myTxIndex = 0;
+	UTXO myUTXO;
+	for (const Transaction * myTx : myTransactions) {
+		const BYTE * myTxHash = myTx->getTransactionHash();
 
+		// 모든 Transaction을 검사하면서 해당 Transaction이 참조됐는지 확인한다.
+		for (const Transaction * myTx2 : myTransactions) {
+			for (const Input input : myTx2->getInputs()) {
+				if (Block::isMemoryEqual((void *)input.getPreviousTransactionHash(), (void *)myTxHash, SHA256_DIGEST_VALUELEN)) {
+					goto REFERENCED_TX;
+				}
+			}
+		}
 
+		// 참조되지 않은 Transaction만 myUTXOTable에 넣는다.
+		myUTXO.setTransactionHash(myTxHash);
+		myUTXO.setBlockIndex(blockIndex[myTxIndex]);
+		myUTXOTable.push_back(myUTXO);
+
+		// 참조된 Transaction은 건너 뛴다.
+	REFERENCED_TX:
+		myTxIndex++;
+	}
+	
+	return myUTXOTable;
 }
-
-
-
-
 
 
 string Blockchain::timeToString(time_t t) {		// -> 분, 초는 2자리 고정에 비어있는 자리는 0으로 채우기...어떻게?
@@ -169,34 +210,3 @@ string Blockchain::timeToString(time_t t) {		// -> 분, 초는 2자리 고정에
 		+ ". " + to_string(date->tm_hour) + ':' + to_string(date->tm_min) + ':' + to_string(date->tm_sec);
 	return result;	
 }
-
-
-//
-//// 블록의 order를 반환한다.
-//const Order * Blockchain::get_order(time_t _order_timestamp) const {
-//	if (last_block == NULL) {
-//		std::cout << "There is no history of your order...\n";
-//		return NULL;
-//	}
-//
-//	// 마지막 블록부터 순차적으로 블록을 찾는다.
-//	const Block * block = last_block;
-//	while (block->get_timestamp() >= _order_timestamp) {
-//		block = block->get_previous_block();
-//	}
-//
-//	// 찾은 블록 안에서 이진탐색으로 원하는 order를 찾는다.
-//	for (std::int32_t low = 0, high = block->get_order().size() - 1; low <= high;) {
-//		std::int32_t mid = ((unsigned int)low + (unsigned int)high) >> 1;
-//		time_t midVal = block->get_order()[mid]->get_timestamp();
-//
-//		if (midVal < _order_timestamp)
-//			low = mid + 1;
-//		else if (midVal > _order_timestamp)
-//			high = mid - 1;
-//		else
-//			return block->get_order()[mid]; // order found
-//	}
-//
-//	return NULL; // order not found.
-//}

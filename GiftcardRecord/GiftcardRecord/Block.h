@@ -27,7 +27,7 @@ class Block {
 	int bits = 2;							// blockhash 앞에 나와야 할 0의 개수(난이도 조절)
 	std::int64_t nonce;						// 임의 대입 수
 
-	std::vector<const Transaction *> tx;	// Transaction
+	std::vector<Transaction *> tx;			// Transaction
 
 	// Block class에서 사용하는 메소드
 	BYTE * createBlockHeader() const;
@@ -46,13 +46,15 @@ class Block {
 	void initializeMerkleHash() const;
 	void addTransactionsFrom(std::queue<Transaction *> & transactionPool);
 
+	static bool isMemoryEqual(const void * a, const void * b, size_t size);	// Assertion: size는 4의 양의 배수
+
 	// getter method
 	inline int getBlockHeaderLength() const;
 	inline const BYTE * getBlockHash() const;
 	inline const Block * getPreviousBlock() const;
 	inline const BYTE * getMerkleHash() const;
 	inline time_t getTimestamp() const;
-	inline std::vector<const Transaction *> getTransaction() const;
+	inline std::vector<Transaction *> getTransaction() const;
 
 	// setter method
 	inline void setBits(int _bits);
@@ -91,7 +93,7 @@ inline time_t Block::getTimestamp() const {
 	return timestamp;
 }
 
-inline std::vector<const Transaction *> Block::getTransaction() const {
+inline std::vector<Transaction *> Block::getTransaction() const {
 	return tx;
 }
 

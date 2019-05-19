@@ -22,9 +22,8 @@ int main()
 	//---------------------- 발행된 상품권 조회 ----------------------
 	/* 사용자가 블록체인 노드에게 UTXO Table 요청 */
 	vector<UTXO> utxoTable = bc.getUTXOTable();
-	for (size_t i = 0; i < utxoTable.size(); i++) {
-		utxoTable[i].print();
-	}
+	w1.setUTXOTable(utxoTable);
+	w1.printUTXOTable();
 	
 
 	//---------------------- 상품권 발행 및 판매 ----------------------
@@ -34,10 +33,10 @@ int main()
 	vector<Output> outputs;	// Transaction Output(수신인, 서명, 금액)
 	outputs.push_back(o);
 
-	Transaction & tx = w2.createCoinbaseTransaction(outputs, "Giftcard Name", "Memo");
+	Transaction * tx = new Transaction(outputs, "Giftcard Name", "Memo");
 
 	/* 판매자의 수수료 거래 생성 */
-	Input i2(w2.getPublicKey(), 10, tx.getTransactionHash());
+	Input i2(w2.getPrivateKey(), 10, tx->getTransactionHash());
 	Output o2(w3.getPublicKey(), 1);
 	Output o2_2(w2.getPublicKey(), 9);
 	vector<Input> inputs2;
@@ -47,10 +46,10 @@ int main()
 	outputs2.push_back(o2);
 	outputs2.push_back(o2_2);
 	
-	Transaction & tx2 = w2.createTransaction(inputs2, outputs2, "Giftcard Name", "Memo");
+	Transaction * tx2 = new Transaction(inputs2, outputs2, "Giftcard Name", "Memo");
 
 	/* 판매자가 블록체인 노드에 거래와 개인키 전송 */
-	if (tx.isValidCoinbase() && tx2.isValid(w2.getPrivateKey())) {
+	if (tx->isValidCoinbase() && tx2->isValid(w2.getPrivateKey())) {	// 서버에 개인키 암호화되어 저장되겠지?
 		bc.addTransaction(tx);
 		bc.addTransaction(tx2);
 
@@ -79,7 +78,7 @@ int main()
 	vector<Input> inputs3;	// Transaction Input(송신인, 서명, 금액)
 	vector<Output> outputs3;	// Transaction Output(수신인, 서명, 금액)
 
-	Input i3(w1.getPublicKey(), 10, w1.getMyUTXOTable());
+	Input i3(w1.getPrivateKey(), 10, w1.getMyUTXOTable());
 	Output o3(w2.getPublicKey(), 5);
 	Output o3_2(w2.getPublicKey(), 3);
 	Output o3_3(w1.getPublicKey(), 2);	// 거스름 돈
@@ -90,10 +89,10 @@ int main()
 	outputs3.push_back(o3_2);
 	outputs3.push_back(o3_3);
 
-	Transaction & tx3 = w1.createTransaction(inputs3, outputs3, "Giftcard Name", "Memo");	// Transaction 발생
+	Transaction * tx3 = new Transaction(inputs3, outputs3, "Giftcard Name", "Memo");	// Transaction 발생
 	
 	/* 블록체인 노드에 거래 전송 */
-	if (tx3.isValid(w1.getPrivateKey())) {
+	if (tx3->isValid(w1.getPrivateKey())) {
 		bc.addTransaction(tx3);
 
 		/* 판매자에게 메시지 전송 */
