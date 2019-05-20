@@ -46,7 +46,7 @@ class Block {
 	void initializeMerkleHash() const;
 	void addTransactionsFrom(std::queue<Transaction *> & transactionPool);
 
-	static bool isMemoryEqual(const void * a, const void * b, size_t size);	// Assertion: size는 4의 양의 배수
+	static bool isMemoryEqual(const void * a, const void * b, size_t size);
 
 	// getter method
 	inline int getBlockHeaderSize() const;

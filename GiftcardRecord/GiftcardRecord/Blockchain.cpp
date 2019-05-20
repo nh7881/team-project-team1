@@ -110,7 +110,7 @@ void Blockchain::printAllTransaction(ostream& o) const {
 	}
 }
 
-void Blockchain::saveBlockchain() const {
+void Blockchain::printBlockchain(std::ostream & o) const {
 	time_t t = time(NULL);
 	struct tm * date = localtime(&t);
 	string filename = lastBlock->version + ' ' + to_string(date->tm_year + 1900) + ". " + to_string(date->tm_mon + 1)
@@ -151,19 +151,19 @@ void Blockchain::saveBlockchain() const {
 	cout << "\n\nFile write complete!\n";
 }
 
-vector<UTXO> Blockchain::getUTXOTable(const BYTE * _publicKey) const {
+// Private Key를 받아 해당 key의 사용되지 않은 거래를 찾아서 반환한다.
+vector<UTXO> Blockchain::getUTXOTable(const BYTE * privateKey) const {
 	vector<Transaction *> myTransactions;
 	
 	const Block * presentBlock = lastBlock;
+	BYTE publicKey[SHA256_DIGEST_VALUELEN];
+	SHA256_Encrpyt(privateKey, SHA256_DIGEST_VALUELEN, publicKey);
 
 	// 블록체인에서 Transaction의 receiverPublicKey가 _publicKey인 Transaction을 찾는다.
 	for (uint64_t i = 0; i < blockCount; i++) {
 		for (Transaction * tx : presentBlock->getTransactions()) {
-			for (const Output output : tx->getOutputs()) {
-				if (Block::isMemoryEqual((void *)_publicKey, (void *)output.getReceiverPublicKey(), SHA256_DIGEST_VALUELEN)) {
-					myTransactions.push_back(tx);
-					break;
-				}
+			if (Block::isMemoryEqual((void *)publicKey, (void *)tx->getOutput().getReceiverPublicKey(), SHA256_DIGEST_VALUELEN)) {
+				myTransactions.push_back(tx);
 			}
 		}
 		presentBlock = presentBlock->previousBlock;
@@ -171,25 +171,19 @@ vector<UTXO> Blockchain::getUTXOTable(const BYTE * _publicKey) const {
 
 	// 모든 Transaction에 대해 참조되지 않은 Transaction만 찾는다. O(n^2) - n은 myTXOSize.
 	vector<UTXO> myUTXOTable;
-	size_t myTxIndex = 0;
-	UTXO myUTXO;
 	for (const Transaction * myTx : myTransactions) {
 		for (const Transaction * myTx2 : myTransactions) {
-			for (const Input input : myTx2->getInputs()) {
-				if (Block::isMemoryEqual((void *)input.getPreviousTransactionHash(), (void *)myTx->getTransactionHash(), SHA256_DIGEST_VALUELEN)) {
-					goto REFERENCED_TX;
-				}
+			if (Block::isMemoryEqual((void *)myTx->getTransactionHash(), (void *)myTx2->getInput().getPreviousTransactionHash(), SHA256_DIGEST_VALUELEN)) {
+				goto REFERENCED;
 			}
 		}
-
-		// 참조되지 않은 Transaction만 myUTXOTable에 넣는다.
-		myUTXO.setTransactionHash(myTx->getTransactionHash());
-		myUTXO.setBlockIndex(myTx->getBlockIndex());
-		myUTXOTable.push_back(myUTXO);
-
-		// 참조된 Transaction은 건너 뛴다.
-	REFERENCED_TX:
-		myTxIndex++;
+		
+		{// 참조되지 않은 Transaction만 myUTXOTable에 넣는다.
+			UTXO myUTXO(myTx->getTransactionHash(), myTx->getBlockIndex(), myTx->getOutput().getAmount());
+			myUTXOTable.push_back(myUTXO);
+		}
+	REFERENCED:
+		0;
 	}
 	
 	return myUTXOTable;

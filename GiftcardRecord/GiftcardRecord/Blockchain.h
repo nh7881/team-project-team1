@@ -26,8 +26,6 @@ public:
 	Blockchain(std::string _version, Transaction * _tx);
 
 	void addTransaction(Transaction * _tx);
-	void saveBlockchain() const;
-	void loadBlockchain();								// -> 개발 중	// isValid와 비슷
 
 	// getter method
 	inline const Block * getGenesisBlock() const;
@@ -37,7 +35,7 @@ public:
 
 
 	std::vector<UTXO> getUTXOTable() const;
-	std::vector<UTXO> getUTXOTable(const BYTE * publicKey) const;
+	std::vector<UTXO> getUTXOTable(const BYTE * privateKey) const;
 
 
 	// setter method
@@ -46,8 +44,11 @@ public:
 	//for debug
 	void printAllBlockHash() const;
 	void printAllMerkleHash() const;
-	void printAllTransaction(std::ostream& o) const;
+	void printAllTransaction(std::ostream & o) const;
 	void printWaitingBlock() const;						// -> 개발 중
+	void printBlockchain(std::ostream & o) const;
+	void loadBlockchain();								// -> 개발 중	// isValid와 비슷
+
 
 	static std::string timeToString(time_t t);
 

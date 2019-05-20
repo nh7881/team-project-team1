@@ -4,23 +4,30 @@
 #include <vector>
 #include <cstdint>
 #include <string>
+#include <cstring>
 #include "KISA_SHA256.h"
+
+class Input;
+class Output;
+class Transaction;
 
 class UTXO {
 	BYTE transactionHash[SHA256_DIGEST_VALUELEN];
 	std::uint64_t blockIndex;
+	std::uint64_t balance;
 
 public:
-	UTXO();
-	UTXO(const BYTE * txHash, std::uint64_t blockIndex);
+	UTXO(const BYTE * txHash, std::uint64_t blockIndex, std::uint64_t balance);
 	void print() const;
 
 	// getter method
-	const BYTE * getTransactionHash() const;
-	std::uint64_t getBlockIndex() const;
+	inline const BYTE * getTransactionHash() const;
+	inline std::uint64_t getBlockIndex() const;
+	inline std::uint64_t getBalance() const;
 
-	void setTransactionHash(const BYTE * _transactionHash);
-	void setBlockIndex(std::uint64_t _blockIndex);
+	inline void setTransactionHash(const BYTE * _transactionHash);
+	inline void setBlockIndex(std::uint64_t _blockIndex);
+	inline void setBalance(std::uint64_t _balance);
 };
 
 class Wallet {
@@ -32,6 +39,11 @@ class Wallet {
 
 public:
 	Wallet(std::string _passPhrase);
+
+	Transaction * createCoinbaseTransaction(std::string giftcardName, std::int64_t sendingAmount, 
+		std::int64_t fee, std::string memo) const;
+	Transaction * createTransaction(const BYTE * receiverPublicKey, std::string giftcardName, std::int64_t sendingAmount, 
+		std::int64_t fee, std::string memo) const;
 
 	// getter method
 	inline const BYTE * getPrivateKey() const;
@@ -48,6 +60,34 @@ public:
 	void printMyUTXOTable() const;
 	void printUTXOTable() const;
 };
+
+
+
+inline const BYTE * UTXO::getTransactionHash() const {
+	return transactionHash;
+}
+
+inline std::uint64_t UTXO::getBlockIndex() const {
+	return blockIndex;
+}
+
+inline std::uint64_t UTXO::getBalance() const {
+	return balance;
+}
+
+inline void UTXO::setTransactionHash(const BYTE * _txHash) {
+	memcpy(transactionHash, _txHash, SHA256_DIGEST_VALUELEN);
+}
+
+inline void UTXO::setBlockIndex(std::uint64_t _blockIndex) {
+	blockIndex = _blockIndex;
+}
+
+inline void UTXO::setBalance(std::uint64_t _balance) {
+	balance = _balance;
+}
+
+
 
 inline const BYTE * Wallet::getPrivateKey() const {
 	return privateKey;

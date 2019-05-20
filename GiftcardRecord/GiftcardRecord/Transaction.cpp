@@ -7,26 +7,20 @@
 #include "Wallet.h"
 using namespace std;
 
+Input::Input() {
+	amount = 0;
+	for (int i = 0; i < sizeof(senderPublicKey); i++) {
+		senderPublicKey[i] = 0;
+	}
+	for (int i = 0; i < sizeof(previousTransactionHash); i++) {
+		previousTransactionHash[i] = 0;
+	}
+}
+
 // Assertion: parameter로 32byte의 문자열 입력
 Input::Input(const BYTE * _senderPrivateKey, std::uint64_t _amount, const BYTE * _previousTransactionHash) : amount(_amount) {
 	SHA256_Encrpyt(_senderPrivateKey, SHA256_DIGEST_VALUELEN, senderPublicKey);
 	memcpy(previousTransactionHash, _previousTransactionHash, SHA256_DIGEST_VALUELEN);
-}
-
-Input::Input(const BYTE * _senderPrivateKey, std::uint64_t _amount, std::vector<UTXO> senderUTXOTable) {
-	for (UTXO senderUTXO : senderUTXOTable) {
-		senderUTXO.
-
-
-	}
-	
-	
-
-
-
-
-
-
 }
 
 
@@ -36,15 +30,13 @@ Output::Output(const BYTE * _receiverPublicKey, std::uint64_t _amount) : amount(
 	memcpy(receiverPublicKey, _receiverPublicKey, SHA256_DIGEST_VALUELEN);
 }
 
-
-
-Transaction::Transaction(std::vector<Output> & _outputs, std::string _giftcardName, std::string _memo) 
-	: outputs(_outputs), giftcardName(_giftcardName), memo(_memo) {
+Transaction::Transaction(Output & _output, std::string _giftcardName, std::string _memo) 
+	: output(_output), giftcardName(_giftcardName), memo(_memo) {
 	hashing();
 }
 
-Transaction::Transaction(vector<Input> & _inputs, std::vector<Output> & _outputs, string _giftcardName, string _memo) 
-	: inputs(_inputs), outputs(_outputs), giftcardName(_giftcardName), memo(_memo) {
+Transaction::Transaction(Input & _input, Output & _output, string _giftcardName, string _memo) 
+	: input(_input), output(_output), giftcardName(_giftcardName), memo(_memo) {
 	hashing();
 }
 
@@ -61,26 +53,22 @@ const BYTE * Transaction::createTransactionData() const {
 	int i = 0;							// transactionData index
 	BYTE * txData = new BYTE[getTransactionDataSize()];
 
-	for (Input input : inputs) {
-		memcpy(txData + i, input.getPreviousTransactionHash(), SHA256_DIGEST_VALUELEN);
-		i += SHA256_DIGEST_VALUELEN;
+	memcpy(txData + i, input.getPreviousTransactionHash(), SHA256_DIGEST_VALUELEN);
+	i += SHA256_DIGEST_VALUELEN;
 
-		memcpy(txData + i, input.getSenderPublicKey(), SHA256_DIGEST_VALUELEN);
-		i += SHA256_DIGEST_VALUELEN;
+	memcpy(txData + i, input.getSenderPublicKey(), SHA256_DIGEST_VALUELEN);
+	i += SHA256_DIGEST_VALUELEN;
 
-		uint64_t amount = input.getAmount();
-		memcpy(txData + i, &amount, sizeof(input.getAmount()));
-		i += sizeof(input.getAmount());
-	}
+	uint64_t amount = input.getAmount();
+	memcpy(txData + i, &amount, sizeof(input.getAmount()));
+	i += sizeof(input.getAmount());
 
-	for (Output output : outputs) {
-		memcpy(txData + i, output.getReceiverPublicKey(), SHA256_DIGEST_VALUELEN);
-		i += SHA256_DIGEST_VALUELEN;
+	memcpy(txData + i, output.getReceiverPublicKey(), SHA256_DIGEST_VALUELEN);
+	i += SHA256_DIGEST_VALUELEN;
 
-		uint64_t amount = output.getAmount();
-		memcpy(txData + i, &amount, sizeof(output.getAmount()));
-		i += sizeof(output.getAmount());
-	}
+	amount = output.getAmount();
+	memcpy(txData + i, &amount, sizeof(output.getAmount()));
+	i += sizeof(output.getAmount());
 
 	memcpy(txData + i, giftcardName.c_str(), giftcardName.length());
 	i += giftcardName.length();

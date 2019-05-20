@@ -18,8 +18,8 @@ class Input {
 	std::uint64_t previousBlockIndex;						// hashing 안 함
 
 public:
-	Input(const BYTE * _senderPrivateKey, std::uint64_t _amount, const BYTE * _previousTransactionHash);	// 상품권 발행
-	Input(const BYTE * _senderPrivateKey, std::uint64_t _amount, std::vector<UTXO> senderUTXOTable);		// 상품권 거래
+	Input();
+	Input(const BYTE * _senderPrivateKey, std::uint64_t _amount, const BYTE * _previousTransactionHash);
 
 	// getter method
 	inline const BYTE * getPreviousTransactionHash() const;
@@ -44,8 +44,8 @@ public:
 class Transaction {
 	BYTE transactionHash[SHA256_DIGEST_VALUELEN];
 
-	std::vector<Input> inputs;
-	std::vector<Output> outputs;
+	Input input;
+	Output output;
 
 	std::string giftcardName;
 	time_t timestamp;
@@ -54,14 +54,14 @@ public:
 	std::string memo;									// hash 안 함
 	std::uint64_t includedBlockIndex;					// hash 안 함
 
-	Transaction(std::vector<Output> & _outputs, std::string _giftcardName, std::string _memo);									// coinbase 거래
-	Transaction(std::vector<Input> & _inputs, std::vector<Output> & _outputs, std::string _giftcardName, std::string _memo);	// 일반 거래
+	Transaction(Output & _outputs, std::string _giftcardName, std::string _memo);					// coinbase 거래
+	Transaction(Input & _inputs, Output & _outputs, std::string _giftcardName, std::string _memo);	// 일반 거래
 
 	const BYTE * createTransactionData() const;
 	std::string toString() const;
 	void print(std::ostream & o) const;
 	void hashing();
-	bool isValid(const BYTE * senderPrivateKey) const;	// input amount > output amount
+	bool isValid(const BYTE * senderPrivateKey) const;	// input amount >= output amount
 	bool isValidCoinbase() const;
 
 
@@ -70,8 +70,8 @@ public:
 	inline time_t getTimestamp() const;
 	inline const std::string getMemo() const;
 	inline const BYTE * getTransactionHash() const;
-	inline std::vector<Input> getInputs() const;
-	inline std::vector<Output> getOutputs() const;
+	inline const Input getInput() const;
+	inline const Output getOutput() const;
 	inline std::uint64_t getBlockIndex() const;
 
 	int getTransactionDataSize() const;					// Hashing할 Transaction Data의 길이(byte)
@@ -109,7 +109,7 @@ inline std::uint64_t Output::getAmount() const {
 }
 
 inline int Transaction::getTransactionDataSize() const {
-	return inputs.size() * (sizeof(Input) - sizeof(std::uint64_t)) + outputs.size() * sizeof(Output) 
+	return (sizeof(Input) - sizeof(std::uint64_t)) + sizeof(Output) 
 		+ giftcardName.length() + sizeof(timestamp);
 }
 
@@ -129,12 +129,12 @@ inline const BYTE * Transaction::getTransactionHash() const {
 	return transactionHash;
 }
 
-inline std::vector<Input> Transaction::getInputs() const {
-	return inputs;
+inline const Input Transaction::getInput() const {
+	return input;
 }
 
-inline std::vector<Output> Transaction::getOutputs() const {
-	return outputs;
+inline const Output Transaction::getOutput() const {
+	return output;
 }
 
 inline std::uint64_t Transaction::getBlockIndex() const {

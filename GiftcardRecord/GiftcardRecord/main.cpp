@@ -7,14 +7,16 @@ using namespace std;
 int main()
 {
 	//---------------------- Test ---------------------
-	vector<Input> inputs_;
-	vector<Output> outputs_;
-	Transaction * tx_ = new Transaction(inputs_, outputs_, "Giftcard Name", "Memo");
-	Transaction * tx2_ = new Transaction(inputs_, outputs_, "Giftcard Name2", "Memo2");
-	Transaction * tx3_ = new Transaction(inputs_, outputs_, "Giftcard Name3", "Memo3");
-	Transaction * tx4_ = new Transaction(inputs_, outputs_, "Giftcard Name4", "Memo4");
+	Wallet w1_("w1");
+	Wallet w2_("w2");
+	Blockchain bc_("Giftcard 1.0");
 
-	Blockchain bc_("Giftcard 1.0", tx_);
+	Transaction * tx_ = w2_.createCoinbaseTransaction("Giftcard Name", 100, 0, "Memo");
+	Transaction * tx2_ = w2_.createTransaction(w1_.getPublicKey(), "Giftcard Name", 10, 0, "Memo");
+	Transaction * tx3_ = w2_.createTransaction(w1_.getPublicKey(), "Giftcard Name", 10, 0, "Memo");
+	Transaction * tx4_ = w2_.createTransaction(w1_.getPublicKey(), "Giftcard Name", 10, 0, "Memo");
+
+	bc_.addTransaction(tx_);
 	bc_.addTransaction(tx2_);
 
 	bc_.setVersion("Giftcard 1.1");
@@ -27,12 +29,8 @@ int main()
 	bc_.printAllTransaction(cout);
 	//bc.printWaitingBlock();
 
-	bc_.saveBlockchain();				// Blockchain을 txt 파일로 저장(출력)
+	bc_.printBlockchain(cout);				// Blockchain을 txt 파일로 저장(출력)
 	//bc.loadBlockchain();
-
-
-
-
 
 
 	//---------------------- 노드 생성 ----------------------
@@ -57,37 +55,16 @@ int main()
 	
 
 	//---------------------- 상품권 발행 및 판매 ----------------------
+
 	/* 판매자의 첫 거래 생성 */
-	Output o(w2.getPublicKey(), 10);
-
-	vector<Output> outputs;	// Transaction Output(수신인, 서명, 금액)
-	outputs.push_back(o);
-
-	Transaction * tx = new Transaction(outputs, "Giftcard Name", "Memo");
-
-	/* 판매자의 수수료 거래 생성 */
-	Input i2(w2.getPrivateKey(), 10, tx->getTransactionHash());
-	Output o2(w3.getPublicKey(), 1);
-	Output o2_2(w2.getPublicKey(), 9);
-	vector<Input> inputs2;
-	vector<Output> outputs2;	// Transaction Output(수신인, 서명, 금액)
-
-	inputs2.push_back(i2);
-	outputs2.push_back(o2);
-	outputs2.push_back(o2_2);
-	
-	Transaction * tx2 = new Transaction(inputs2, outputs2, "Giftcard Name", "Memo");
+	Transaction * tx = w2.createCoinbaseTransaction("Giftcard Name", 100, 0, "Memo"); // 상품권 종류, 보낼 금액, 수수료, 메모
 
 	/* 판매자가 블록체인 노드에 거래와 개인키 전송 */
-	if (tx->isValidCoinbase() && tx2->isValid(w2.getPrivateKey())) {	// 서버에 개인키 암호화되어 저장되겠지?
+	if (tx->isValidCoinbase()) {
 		bc.addTransaction(tx);
-		bc.addTransaction(tx2);
 
 		/* 판매자에게 메시지 전송 */
-		cout << "판매 성공!\n";
-		
-		/* 구매자에게 메시지 전송 */
-		cout << "구매 성공!\n";
+		cout << "상품권 발행 성공!\n";		
 	}
 	else {
 		/* 판매자에게 메시지 전송 */
@@ -96,8 +73,8 @@ int main()
 	
 
 	//---------------------- 자신의 상품권 목록 요청 ----------------------
-	/* 블록체인 노드에게 자신의 공개키 전송 후 UTXO Table 얻음 */
-	vector<UTXO> myUTXOTable = bc.getUTXOTable(w1.getPublicKey());
+	/* 블록체인 노드에게 자신의 개인키 전송 후 UTXO Table 얻음 */
+	vector<UTXO> myUTXOTable = bc.getUTXOTable(w1.getPrivateKey());
 
 	/* 지갑에 자신의 UTXO 리스트 저장 */
 	w1.setMyUTXOTable(myUTXOTable);
@@ -105,30 +82,17 @@ int main()
 
 
 	//---------------------- 상품권 거래 ----------------------
-	vector<Input> inputs3;	// Transaction Input(송신인, 서명, 금액)
-	vector<Output> outputs3;	// Transaction Output(수신인, 서명, 금액)
+	/* 상품권 거래 생성 */
+	Transaction * tx2 = w2.createTransaction(w1.getPublicKey(), "Giftcard Name", 1, 0, "Memo"); // 받는 사람, 상품권 종류, 보낼 금액, 수수료, 메모 
 
-	Input i3(w1.getPrivateKey(), 10, w1.getMyUTXOTable());
-	Output o3(w2.getPublicKey(), 5);
-	Output o3_2(w2.getPublicKey(), 3);
-	Output o3_3(w1.getPublicKey(), 2);	// 거스름 돈
-	
-	inputs3.push_back(i3);
-
-	outputs3.push_back(o3);
-	outputs3.push_back(o3_2);
-	outputs3.push_back(o3_3);
-
-	Transaction * tx3 = new Transaction(inputs3, outputs3, "Giftcard Name", "Memo");	// Transaction 발생
-	
 	/* 블록체인 노드에 거래 전송 */
-	if (tx3->isValid(w1.getPrivateKey())) {
-		bc.addTransaction(tx3);
+	if (tx2->isValid(w2.getPrivateKey())) {
+		bc.addTransaction(tx2);
 
-		/* 판매자에게 메시지 전송 */
+		/* w2에게 메시지 전송 */
 		cout << "판매 성공!\n";
 
-		/* 구매자에게 메시지 전송 */
+		/* w1에게 메시지 전송 */
 		cout << "구매 성공!\n";
 	}
 	else {
