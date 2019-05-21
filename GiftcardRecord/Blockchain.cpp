@@ -162,8 +162,11 @@ vector<UTXO> Blockchain::getUTXOTable(const BYTE * privateKey) const {
 	// 블록체인에서 Transaction의 receiverPublicKey가 _publicKey인 Transaction을 찾는다.
 	for (uint64_t i = 0; i < blockCount; i++) {
 		for (Transaction * tx : presentBlock->getTransactions()) {
-			if (Block::isMemoryEqual((void *)publicKey, (void *)tx->getOutput().getReceiverPublicKey(), SHA256_DIGEST_VALUELEN)) {
-				myTransactions.push_back(tx);
+			for(Output * output : tx->getOutputs()) {
+				if (Block::isMemoryEqual((void *)publicKey, (void *)output->getReceiverPublicKey, SHA256_DIGEST_VALUELEN)) {
+					myTransactions.push_back(tx);
+					break;
+				}
 			}
 		}
 		presentBlock = presentBlock->previousBlock;
@@ -173,17 +176,18 @@ vector<UTXO> Blockchain::getUTXOTable(const BYTE * privateKey) const {
 	vector<UTXO> myUTXOTable;
 	for (const Transaction * myTx : myTransactions) {
 		for (const Transaction * myTx2 : myTransactions) {
-			if (Block::isMemoryEqual((void *)myTx->getTransactionHash(), (void *)myTx2->getInput().getPreviousTransactionHash(), SHA256_DIGEST_VALUELEN)) {
-				goto REFERENCED;
+			for(Input * input : myTx2->getInputs()) {
+				if (Block::isMemoryEqual((void *)myTx->getTransactionHash(), (void *)input->getPreviousTransactionHash(), SHA256_DIGEST_VALUELEN))
+					goto REFERENCED;
 			}
 		}
-		
+
 		{// 참조되지 않은 Transaction만 myUTXOTable에 넣는다.
-			UTXO myUTXO(myTx->getTransactionHash(), myTx->getBlockIndex(), myTx->getOutput().getAmount());
+			UTXO myUTXO(myTx->getTransactionHash(), myTx->getBlockIndex(), myTx->getOutput()->getAmount());
 			myUTXOTable.push_back(myUTXO);
 		}
-	REFERENCED:
-		0;
+		REFERENCED:
+		continue;
 	}
 	
 	return myUTXOTable;

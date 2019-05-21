@@ -9,6 +9,7 @@
 
 class Input;
 class Output;
+class Giftcard;
 class Transaction;
 
 class UTXO {
@@ -40,9 +41,9 @@ class Wallet {
 public:
 	Wallet(std::string _passPhrase);
 
-	Transaction * createCoinbaseTransaction(std::string giftcardName, std::int64_t sendingAmount, 
+	Transaction * createCoinbaseTransaction(Giftcard * _giftcard, std::int64_t sendingAmount, 
 		std::int64_t fee, std::string memo) const;
-	Transaction * createTransaction(const BYTE * receiverPublicKey, std::string giftcardName, std::int64_t sendingAmount, 
+	Transaction * createTransaction(const BYTE * receiverPublicKey, Giftcard * _giftcard, std::int64_t sendingAmount,
 		std::int64_t fee, std::string memo) const;
 
 	// getter method
