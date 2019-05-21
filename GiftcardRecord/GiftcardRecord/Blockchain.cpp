@@ -10,7 +10,6 @@
 #include "Wallet.h"
 using namespace std;
 
-
 ostream & operator<<(ostream& o, const BYTE * hash) {
 	o << "0x";
 	for (int i = 0; i < SHA256_DIGEST_VALUELEN; i++) {
@@ -110,7 +109,7 @@ void Blockchain::printAllTransaction(ostream& o) const {
 	}
 }
 
-void Blockchain::printBlockchain(std::ostream & o) const {
+void Blockchain::printBlockchain(ostream & o) const {
 	time_t t = time(NULL);
 	struct tm * date = localtime(&t);
 	string filename = lastBlock->version + ' ' + to_string(date->tm_year + 1900) + ". " + to_string(date->tm_mon + 1)
@@ -159,7 +158,7 @@ vector<UTXO> Blockchain::getUTXOTable(const BYTE * privateKey) const {
 	BYTE publicKey[SHA256_DIGEST_VALUELEN];
 	SHA256_Encrpyt(privateKey, SHA256_DIGEST_VALUELEN, publicKey);
 
-	// 블록체인에서 Transaction의 receiverPublicKey가 _publicKey인 Transaction을 찾는다.
+	// 블록체인에서 Transaction의 receiverPublicKey가 publicKey인 Transaction을 찾는다.
 	for (uint64_t i = 0; i < blockCount; i++) {
 		for (Transaction * tx : presentBlock->getTransactions()) {
 			for(Output * output : tx->getOutputs()) {
@@ -172,20 +171,26 @@ vector<UTXO> Blockchain::getUTXOTable(const BYTE * privateKey) const {
 		presentBlock = presentBlock->previousBlock;
 	}
 
-	// 모든 Transaction에 대해 참조되지 않은 Transaction만 찾는다. O(n^2) - n은 myTXOSize.
+	// 모든 Transaction에 대해 참조되지 않은 Transaction만 찾는다. O(n^2) - n은 myTxSize.
 	vector<UTXO> myUTXOTable;
 	for (const Transaction * myTx : myTransactions) {
 		for (const Transaction * myTx2 : myTransactions) {
-			for(Input * input : myTx2->getInputs()) {
+			for(const Input * input : myTx2->getInputs()) {
 				if (Block::isMemoryEqual((void *)myTx->getTransactionHash(), (void *)input->getPreviousTransactionHash(), SHA256_DIGEST_VALUELEN))
-					goto REFERENCED;
+					break;
+					//goto REFERENCED;
 			}
 		}
 
-		{// 참조되지 않은 Transaction만 myUTXOTable에 넣는다.
-			UTXO myUTXO(myTx->getTransactionHash(), myTx->getBlockIndex(), myTx->getOutput()->getAmount());
-			myUTXOTable.push_back(myUTXO);
+		// 참조되지 않은 Transaction의 output만 myUTXOTable에 넣는다.
+		for (const Output * output : myTx->getOutputs()) {
+			if (Block::isMemoryEqual((void *)publicKey, (void *)output->getReceiverPublicKey, SHA256_DIGEST_VALUELEN)) {
+				UTXO myUTXO(myTx->getTransactionHash(), myTx->blockIndex, output->getAmount());
+				myUTXOTable.push_back(myUTXO);
+			}
 		}
+		
+		// 참조된 Transaction output은 Table에 넣지 않는다.
 		REFERENCED:
 		continue;
 	}

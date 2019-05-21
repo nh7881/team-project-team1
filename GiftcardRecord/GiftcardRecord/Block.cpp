@@ -3,6 +3,7 @@
 #include <ctime>
 #include <queue>
 #include "Block.h"
+//#include "Giftcard.h"
 #include "Transaction.h"
 using namespace std;
 
@@ -23,7 +24,7 @@ void Block::mining() {
 		blockIndex = 0;
 	
 	for (Transaction * tx : transactions) {
-		tx->setIncludedBlockIndex(blockIndex);
+		tx->blockIndex = blockIndex;
 	}
 	
 	BYTE * blockHeader = createBlockHeader();

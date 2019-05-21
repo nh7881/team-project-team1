@@ -1,8 +1,11 @@
 #pragma once
 #ifndef BLOCKCHAIN_H
 #define BLOCKCHAIN_H
+#include <iostream>
 #include <cstdint>
 #include <queue>
+#include <ctime>
+#include <vector>
 #include <string>
 #include "KISA_SHA256.h"
 
@@ -35,7 +38,7 @@ public:
 
 
 	std::vector<UTXO> getUTXOTable() const;
-	std::vector<UTXO> getUTXOTable(const BYTE * privateKey) const;
+	std::vector<UTXO> getUTXOTable(const BYTE * privateKey) const;	// -> test 필요함
 
 
 	// setter method

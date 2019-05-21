@@ -51,8 +51,8 @@ class Transaction {
 	time_t timestamp;
 
 public:
-	std::string memo;									// hash 안 함
-	std::uint64_t includedBlockIndex;					// hash 안 함
+	std::string memo;							// hash 안 함
+	std::uint64_t blockIndex;					// hash 안 함
 
 	Transaction(std::vector<Input *> _inputs, std::vector<Output *> _outputs, Giftcard * _giftcard, std::string _memo);	// 일반 거래
 	~Transaction();
@@ -72,7 +72,6 @@ public:
 	inline const BYTE * getTransactionHash() const;
 	inline std::vector<Input *> getInputs() const;
 	inline std::vector<Output *> getOutputs() const;
-	inline std::uint64_t getBlockIndex() const;
 
 	int getTransactionDataSize() const;					// Hashing할 Transaction Data의 길이(byte)
 	int getConfirmation() const;
@@ -81,7 +80,6 @@ public:
 	int getTransactionFee() const;
 
 	// setter method
-	inline void setIncludedBlockIndex(std::uint64_t _blockIndex);
 };
 
 inline const BYTE * Input::getPreviousTransactionHash() const {
@@ -108,11 +106,6 @@ inline std::uint64_t Output::getAmount() const {
 	return amount;
 }
 
-inline int Transaction::getTransactionDataSize() const {
-	return inputs.size() * (sizeof(Input) - sizeof(std::uint64_t)) + outputs.size() * sizeof(Output) 
-		+ giftcard->getName().length() + sizeof(timestamp);
-}
-
 inline time_t Transaction::getTimestamp() const {
 	return timestamp;
 }
@@ -137,12 +130,5 @@ inline std::vector<Output *> Transaction::getOutputs() const {
 	return outputs;
 }
 
-inline std::uint64_t Transaction::getBlockIndex() const {
-	return includedBlockIndex;
-}
-
-inline void Transaction::setIncludedBlockIndex(std::uint64_t _blockIndex) {
-	includedBlockIndex = _blockIndex;
-}
 
 #endif

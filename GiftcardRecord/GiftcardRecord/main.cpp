@@ -17,6 +17,7 @@ int main()
 	Transaction * tx3_ = w2_.createTransaction(w1_.getPublicKey(), new Giftcard("Giftcard Name"), 10, 0, "Memo");
 	Transaction * tx4_ = w2_.createTransaction(w1_.getPublicKey(), new Giftcard("Giftcard Name"), 10, 0, "Memo");
 
+
 	bc_.addTransaction(tx_);
 	bc_.addTransaction(tx2_);
 

@@ -1,7 +1,8 @@
 #include <vector>
+#include <string>
 #include "Wallet.h"
 #include "Transaction.h"
-#include "KISA_SHA256.h"
+//#include "KISA_SHA256.h"
 using namespace std;
 
 UTXO::UTXO(const BYTE * txHash, std::uint64_t _blockIndex, std::uint64_t _balance) 

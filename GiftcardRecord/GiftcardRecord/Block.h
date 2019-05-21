@@ -4,7 +4,6 @@
 #define MAX_TRANSACTION_COUNT 1			// 한 블록에 들어갈 수 있는 최대 transaction의 개수
 #define VALID_TIMESTAMP_GAP 60
 #include <iostream>
-#include <fstream>
 #include <vector>
 #include <queue>
 #include <string>

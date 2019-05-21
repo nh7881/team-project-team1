@@ -2,9 +2,9 @@
 #ifndef GIFTCARD_H
 #define GIFTCARD_H
 #include <string>
-class Giftcard
-{
-	std::string name;	// hashing ÇÔ
+
+class Giftcard {
+	std::string name;	// hashing í•¨
 
 public:
 	Giftcard(std::string _name);

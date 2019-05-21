@@ -3,8 +3,8 @@
 #include <ctime>
 #include <vector>
 #include "Transaction.h"
-#include "Blockchain.h"
-#include "Wallet.h"
+//#include "Blockchain.h"
+//#include "Wallet.h"
 #include "Giftcard.h"
 using namespace std;
 
@@ -86,6 +86,11 @@ const BYTE * Transaction::createTransactionData() const {
 	i += sizeof(timestamp);
 	
 	return txData;
+}
+
+int Transaction::getTransactionDataSize() const {
+	return inputs.size() * (sizeof(Input) - sizeof(std::uint64_t)) + outputs.size() * sizeof(Output)
+		+ giftcard->getName().length() + sizeof(timestamp);
 }
 
 std::string Transaction::toString() const {
