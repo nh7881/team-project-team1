@@ -41,3 +41,10 @@
 *.pdb
 *.log
 *.vscode
+*.idb
+vc141.idb
+*.iobj
+*.ipdb
+
+# Text
+*.txt

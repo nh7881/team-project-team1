@@ -2,6 +2,7 @@
 #include <string>
 #include <ctime>
 #include <vector>
+#include <cstring>
 #include "Transaction.h"
 #include "Giftcard.h"
 using namespace std;
@@ -48,6 +49,16 @@ void Transaction::hashing() {
 
 	SHA256_Encrpyt(txData, getTransactionDataSize(), transactionHash);
 	delete[] txData;
+}
+
+bool Transaction::isValid(const BYTE * senderPrivateKey) const
+{
+	return false;
+}
+
+bool Transaction::isValidCoinbase() const
+{
+	return false;
 }
 
 // 반환된 포인터는 delete[]로 메모리 할당 해제가 필요함.
@@ -97,12 +108,9 @@ std::string Transaction::toString() const {
 	return std::string();
 }
 
-//void Transaction::print(ostream & o) const {
-//	o << "Who: " << who << '\n';
-//	o << "When: " << Blockchain::timeToString(timestamp) << '\n';
-//	o << "What: " << what << '\n';
-//	o << "Why: " << why << '\n';
-//}
+void Transaction::print(ostream & o) const {
+
+}
 
 
 

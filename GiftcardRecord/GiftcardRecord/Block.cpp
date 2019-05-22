@@ -2,6 +2,7 @@
 #include <vector>
 #include <ctime>
 #include <queue>
+#include <cstring>
 #include "Block.h"
 //#include "Giftcard.h"
 #include "Transaction.h"
@@ -66,8 +67,8 @@ BYTE * Block::createBlockHeader() const {
 		i += sizeof(previousBlock->blockHash);
 	}
 	else {
-		memcpy(blockHeader + i, previousBlock, sizeof(previousBlock));
-		i += sizeof(previousBlock->blockHash);
+		memset(blockHeader + i, 0, sizeof(previousBlock));
+		i += sizeof(previousBlock);
 	}
 
 	memcpy(blockHeader + i, merkleHash, sizeof(merkleHash));

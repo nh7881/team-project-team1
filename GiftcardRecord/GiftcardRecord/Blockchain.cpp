@@ -150,6 +150,11 @@ void Blockchain::printBlockchain(ostream & o) const {
 	cout << "\n\nFile write complete!\n";
 }
 
+std::vector<UTXO> Blockchain::getUTXOTable() const
+{
+	return std::vector<UTXO>();
+}
+
 // Private Key를 받아 해당 key의 사용되지 않은 거래를 찾아서 반환한다.
 vector<UTXO> Blockchain::getUTXOTable(const BYTE * privateKey) const {
 	vector<Transaction *> myTransactions;
@@ -162,7 +167,7 @@ vector<UTXO> Blockchain::getUTXOTable(const BYTE * privateKey) const {
 	for (uint64_t i = 0; i < blockCount; i++) {
 		for (Transaction * tx : presentBlock->getTransactions()) {
 			for(Output * output : tx->getOutputs()) {
-				if (Block::isMemoryEqual((void *)publicKey, (void *)output->getReceiverPublicKey, SHA256_DIGEST_VALUELEN)) {
+				if (Block::isMemoryEqual(publicKey, output->getReceiverPublicKey(), SHA256_DIGEST_VALUELEN)) {
 					myTransactions.push_back(tx);
 					break;
 				}
@@ -176,15 +181,14 @@ vector<UTXO> Blockchain::getUTXOTable(const BYTE * privateKey) const {
 	for (const Transaction * myTx : myTransactions) {
 		for (const Transaction * myTx2 : myTransactions) {
 			for(const Input * input : myTx2->getInputs()) {
-				if (Block::isMemoryEqual((void *)myTx->getTransactionHash(), (void *)input->getPreviousTransactionHash(), SHA256_DIGEST_VALUELEN))
-					break;
-					//goto REFERENCED;
+				if (Block::isMemoryEqual(myTx->getTransactionHash(), input->getPreviousTransactionHash(), SHA256_DIGEST_VALUELEN))
+					goto REFERENCED;
 			}
 		}
 
 		// 참조되지 않은 Transaction의 output만 myUTXOTable에 넣는다.
 		for (const Output * output : myTx->getOutputs()) {
-			if (Block::isMemoryEqual((void *)publicKey, (void *)output->getReceiverPublicKey, SHA256_DIGEST_VALUELEN)) {
+			if (Block::isMemoryEqual(publicKey, output->getReceiverPublicKey(), SHA256_DIGEST_VALUELEN)) {
 				UTXO myUTXO(myTx->getTransactionHash(), myTx->blockIndex, output->getAmount());
 				myUTXOTable.push_back(myUTXO);
 			}

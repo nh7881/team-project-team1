@@ -1,5 +1,6 @@
 #include <vector>
 #include <string>
+#include <cstring>
 #include "Wallet.h"
 #include "Transaction.h"
 using namespace std;
@@ -38,7 +39,8 @@ Transaction * Wallet::createCoinbaseTransaction(Giftcard * giftcard, std::int64_
 	Output * output = new Output(publicKey, sendingAmount - fee);
 	outputs.push_back(output);
 
-	Transaction * tx = new Transaction(inputs, outputs, giftcard, memo);
+	
+	return new Transaction(inputs, outputs, giftcard, memo);
 }
 
 Transaction * Wallet::createTransaction(const BYTE * receiverPublicKey, Giftcard * giftcard, std::int64_t sendingAmount,
@@ -55,8 +57,7 @@ Transaction * Wallet::createTransaction(const BYTE * receiverPublicKey, Giftcard
 	// °Å½º¸§µ·Àº ÀÚ±â Áö°©¿¡ º¸³¿
 	//Output * output = new Output(publicKey, sendingAmount - fee);
 
-	Transaction * tx = new Transaction(inputs, outputs, giftcard, memo);
-
+	return new Transaction(inputs, outputs, giftcard, memo);
 }
 
 
