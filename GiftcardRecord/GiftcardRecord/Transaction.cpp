@@ -21,15 +21,17 @@ Input::Input(const BYTE * _senderPrivateKey, std::uint64_t _amount, const BYTE *
 }
 
 
+//-----------------------------------------------------------------------------------------
+
+
 // Assertion: parameter로 32byte의 문자열 입력
 Output::Output(const BYTE * _receiverPublicKey, std::uint64_t _amount) : amount(_amount) {
 	memcpy(receiverPublicKey, _receiverPublicKey, SHA256_DIGEST_VALUELEN);
 }
 
-//Transaction::Transaction(Output * _output, std::string _giftcardName, std::string _memo) 
-//	: output(_output), giftcardName(_giftcardName), memo(_memo) {
-//	hashing();
-//}
+
+//-----------------------------------------------------------------------------------------
+
 
 Transaction::Transaction(vector<Input *> _inputs, vector<Output *> _outputs, Giftcard * _giftcard, string _memo) 
 	: inputs(_inputs), outputs(_outputs), giftcard(_giftcard), memo(_memo) {

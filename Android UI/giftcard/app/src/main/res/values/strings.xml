@@ -1,0 +1,26 @@
+<resources>
+    <string name="app_name">Project Gift Card login</string>
+    <!-- Strings related to login -->
+    <string name="prompt_email">Email</string>
+    <string name="prompt_password">Password</string>
+    <string name="action_sign_in">Sign in or register</string>
+    <string name="action_sign_in_short">Sign in</string>
+    <string name="welcome">"Welcome !"</string>
+    <string name="invalid_username">Not a valid username</string>
+    <string name="invalid_password">Password must be >5 characters</string>
+    <string name="login_failed">"Login failed"</string>
+    <string name="logint">로그인</string>
+    <string name="Create">회원가입 하러가기 ></string>
+    <string name="email">이메일 찾기</string>
+    <string name="password">비밀번호</string>
+    <string name="text1">|</string>
+    <string name="psw">비밀번호 찾기</string>
+    <string name="loginbt">상품관 구매하기</string>
+    <string name="loginbt1">상품관 등록하기</string>
+    <string name="title_activity_main">MainActivity</string>
+    <string name="title_activity_cardimage">cardimage</string>
+    <string name="title_home">Home</string>
+    <string name="title_dashboard">Dashboard</string>
+    <string name="title_notifications">Notifications</string>
+    <string name="title_activity_buycard">buycard</string>
+</resources>
