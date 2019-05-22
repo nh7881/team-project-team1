@@ -3,9 +3,12 @@
 #include <ctime>
 #include <vector>
 #include <cstring>
+#include "Blockchain.h"
 #include "Transaction.h"
 #include "Giftcard.h"
 using namespace std;
+
+ostream & operator<<(ostream& o, const BYTE * hash);
 
 // Assertion: parameter로 32byte의 문자열 입력
 Input::Input(const BYTE * _senderPrivateKey, std::uint64_t _amount, const BYTE * _previousTransactionHash) : amount(_amount) {
@@ -30,6 +33,7 @@ Output::Output(const BYTE * _receiverPublicKey, std::uint64_t _amount) : amount(
 
 Transaction::Transaction(vector<Input *> _inputs, vector<Output *> _outputs, Giftcard * _giftcard, string _memo) 
 	: inputs(_inputs), outputs(_outputs), giftcard(_giftcard), memo(_memo) {
+	timestamp = time(NULL);
 	hashing();
 }
 
@@ -109,7 +113,23 @@ std::string Transaction::toString() const {
 }
 
 void Transaction::print(ostream & o) const {
+	o << "Transaction Hash: " << transactionHash << "\n";
+	
+	for (Input * input : inputs) {
+		o << "\tSender's public key: " << input->getSenderPublicKey() << '\n';
+		o << "\tSending amount: " << input->getAmount() << '\n';
+		o << "\tPrevious transaction hash: " << input->getPreviousTransactionHash() << '\n';
+		o << "\tPrevious transaction in " << input->getPreviousBlockIndex() << "th Block\n\n";
+	}
 
+	for (Output * output : outputs) {
+		o << "\tReceiver's public key: " << output->getReceiverPublicKey() << '\n';
+		o << "\tReceiving amount: " << output->getAmount() << "\n\n";
+	}
+	
+	o << "Giftcard name: " << giftcard->getName() << '\n';
+	o << "Timestamp: " << Blockchain::timeToString(timestamp) << '\n';
+	o << "Memo: " << memo << '\n';
 }
 
 

@@ -70,7 +70,7 @@ int main()
 	}
 	else {
 		/* 판매자에게 메시지 전송 */
-		cout << "잘못된 거래 내역\n";
+		cout << "Invalid transaction data...\n";
 	}
 	
 
@@ -99,7 +99,7 @@ int main()
 	}
 	else {
 		/* 판매자에게 메시지 전송 */
-		cout << "잘못된 거래 내역\n";
+		cout << "Invalid transaction data...\n";
 	}
 
 
