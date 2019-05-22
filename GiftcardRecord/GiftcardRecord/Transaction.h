@@ -51,8 +51,8 @@ class Transaction {
 	time_t timestamp;
 
 public:
-	std::string memo;							// hash 안 함
 	std::uint64_t blockIndex;					// hash 안 함
+	std::string memo;							// hash 안 함
 
 	Transaction(std::vector<Input *> _inputs, std::vector<Output *> _outputs, Giftcard * _giftcard, std::string _memo);	// 일반 거래
 	~Transaction();

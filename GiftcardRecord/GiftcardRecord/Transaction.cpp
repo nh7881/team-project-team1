@@ -3,8 +3,6 @@
 #include <ctime>
 #include <vector>
 #include "Transaction.h"
-//#include "Blockchain.h"
-//#include "Wallet.h"
 #include "Giftcard.h"
 using namespace std;
 
@@ -84,7 +82,7 @@ const BYTE * Transaction::createTransactionData() const {
 
 	memcpy(txData + i, &timestamp, sizeof(timestamp));
 	i += sizeof(timestamp);
-	
+
 	return txData;
 }
 

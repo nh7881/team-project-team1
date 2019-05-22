@@ -15,6 +15,7 @@ Block::Block(const Block * _previousBlock) : previousBlock(_previousBlock) {
 		cout << "error: block bits must be between 0 and 32.\n\n";
 }
 
+
 void Block::mining() {
 	nonce = 0;
 	timestamp = time(NULL);
@@ -132,7 +133,7 @@ bool Block::isValid() const {
 	const BYTE * blockHeader = createBlockHeader();
 	SHA256_Encrpyt(blockHeader, getBlockHeaderSize(), hash);
 
-	if (Block::isMemoryEqual(hash, blockHash, SHA256_DIGEST_VALUELEN)) {
+	if (isMemoryEqual(hash, blockHash, SHA256_DIGEST_VALUELEN)) {
 		cout << "\n\nUnvalid block... Block Header are changed...\n";
 		delete[] hash;
 		delete[] blockHeader;
@@ -147,7 +148,7 @@ bool Block::isValid() const {
 bool Block::transactionsAreValid() const {
 	const BYTE * merkleRoot = createMerkleRoot();
 
-	if (Block::isMemoryEqual(merkleRoot, merkleHash, SHA256_DIGEST_VALUELEN)) {
+	if (isMemoryEqual(merkleRoot, merkleHash, SHA256_DIGEST_VALUELEN)) {
 		cout << "\n\nUnvalid transaction... Some of Transaction Data are changed...\n";
 		delete[] merkleRoot;
 		return false;

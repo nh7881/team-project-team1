@@ -31,7 +31,7 @@ int main()
 	bc_.printAllTransaction(cout);
 	//bc.printWaitingBlock();
 
-	bc_.printBlockchain(cout);				// Blockchain을 txt 파일로 저장(출력)
+//	bc_.printBlockchain(cout);				// Blockchain을 txt 파일로 저장(출력)
 	//bc.loadBlockchain();
 
 

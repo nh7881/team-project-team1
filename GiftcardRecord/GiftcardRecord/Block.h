@@ -60,7 +60,7 @@ class Block {
 };
 
 inline int Block::getBlockHeaderSize() const {
-	return sizeof(blockIndex) + version.length() + sizeof(previousBlock->blockHash) + sizeof(merkleHash)
+	return sizeof(blockIndex) + version.length() + sizeof(previousBlock->blockHash) + sizeof(merkleHash) 
 		+ sizeof(bits) + sizeof(timestamp) + sizeof(nonce);	// 8 + 12 + 32 + 32 + 4 + 8 + 8
 }
 
