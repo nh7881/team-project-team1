@@ -36,15 +36,16 @@ class Wallet {
 	BYTE publicKey[SHA256_DIGEST_VALUELEN];
 
 	std::vector<UTXO> myUTXOTable;
-	std::vector<UTXO> utxoTable;
+	std::vector<UTXO> UTXOTable;
+
+	std::uint64_t nonce;
 
 public:
 	Wallet(std::string _passPhrase);
 
-	Transaction * createCoinbaseTransaction(Giftcard * _giftcard, std::int64_t sendingAmount, 
-		std::int64_t fee, std::string memo) const;
-	Transaction * createTransaction(const BYTE * receiverPublicKey, Giftcard * _giftcard, std::int64_t sendingAmount,
-		std::int64_t fee, std::string memo) const;
+	Transaction * createCoinbaseTransaction(std::uint64_t blockIndex, std::string type, std::string memo = NULL);
+	Transaction * createTransaction(const BYTE * receiverPublicKey, std::string type, std::int64_t sendingAmount,
+		std::int64_t fee, std::string memo = NULL);
 
 	// getter method
 	inline const BYTE * getPrivateKey() const;
@@ -103,7 +104,7 @@ inline std::vector<UTXO> Wallet::getMyUTXOTable() const {
 }
 
 inline std::vector<UTXO> Wallet::getUTXOTable() const {
-	return utxoTable;
+	return UTXOTable;
 }
 
 inline void Wallet::setMyUTXOTable(std::vector<UTXO> & _myUTXOTable) {
@@ -111,7 +112,7 @@ inline void Wallet::setMyUTXOTable(std::vector<UTXO> & _myUTXOTable) {
 }
 
 inline void Wallet::setUTXOTable(std::vector<UTXO> & _utxoTable) {
-	utxoTable = _utxoTable;
+	UTXOTable = _utxoTable;
 }
 
 

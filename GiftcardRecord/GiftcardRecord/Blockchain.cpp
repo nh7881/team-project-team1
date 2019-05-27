@@ -22,27 +22,30 @@ ostream & operator<<(ostream& o, const BYTE * hash) {
 }
 
 // Genesis block을 생성한다.
-Blockchain::Blockchain(string _version) : blockCount(0), version(_version) {
+Blockchain::Blockchain(string _version, Wallet * wallet) : blockCount(0), version(_version) {
 	Block * _genesisBlock = new Block();
-	_genesisBlock->transactions.reserve(MAX_TRANSACTION_COUNT);
 	genesisBlock = _genesisBlock;
-	lastBlock = NULL;
-	waitingBlock = _genesisBlock;
-}
+	_genesisBlock->version = version;		// 현재 blockchain version 입력
+	_genesisBlock->transactions.push_back(wallet->createCoinbaseTransaction(blockCount, "coin", "memo"));
+	_genesisBlock->initializeMerkleHash();	// transaction으로 merkletree의 merkleroot(=merklehash) 계산
+	_genesisBlock->mining();				// waiting block을 채굴
+	addBlock(_genesisBlock);				// waiting block을 blockchain에 추가
 
-// Genesis block을 생성하고 그 블록에 Transaction을 추가한다.
-Blockchain::Blockchain(string _version, Transaction * _tx) : Blockchain(_version) {
-	addTransaction(_tx);
+	Block * newWaitingBlock = new Block(lastBlock);
+	waitingBlock = newWaitingBlock;
 }
 
 // transaction pool에 transaction을 추가한다.
-void Blockchain::addTransaction(Transaction * _tx) {
-	transactionPool.push(_tx);
+void Blockchain::addTransactionToPool(Transaction * _tx) {
+	transactionPool.push(_tx);	
+}
 
-	// transactionPool에 처리되지 않은 transaction이 많으면
+// transaction pool에서 transaction을 가져와 채굴한다.
+void Blockchain::produceBlock(Wallet * wallet) {
 	if (transactionPool.size() >= MAX_TRANSACTION_COUNT) {
-		waitingBlock->version = version;		// 현재 blockchain version 복사
-		waitingBlock->addTransactionsFrom(transactionPool);		
+		waitingBlock->version = version;		// 현재 blockchain version 입력
+		waitingBlock->getTransactions().push_back(wallet->createCoinbaseTransaction(blockCount, "coin", "memo"));
+		waitingBlock->addTransactionsFrom(transactionPool);
 		waitingBlock->initializeMerkleHash();	// transaction으로 merkletree의 merkleroot(=merklehash) 계산
 		waitingBlock->mining();					// waiting block을 채굴
 		addBlock(waitingBlock);					// waiting block을 blockchain에 추가
@@ -50,6 +53,16 @@ void Blockchain::addTransaction(Transaction * _tx) {
 		Block * newWaitingBlock = new Block(lastBlock);
 		waitingBlock = newWaitingBlock;
 	}
+	else {
+		cout << "There aren't enough transactions in the memory pool to produce block...\n";
+	}
+}
+
+string Blockchain::getFileName() const {
+	time_t t = time(NULL);
+	struct tm * date = localtime(&t);
+	return lastBlock->version + ' ' + to_string(date->tm_year + 1900) + ". " + to_string(date->tm_mon + 1)
+		+ ". " + to_string(date->tm_mday) + ".txt";;
 }
 
 void Blockchain::printAllBlockHash() const {
@@ -110,55 +123,58 @@ void Blockchain::printAllTransaction(ostream& o) const {
 }
 
 void Blockchain::printBlockchain(ostream & o) const {
-	time_t t = time(NULL);
-	struct tm * date = localtime(&t);
-	string filename = lastBlock->version + ' ' + to_string(date->tm_year + 1900) + ". " + to_string(date->tm_mon + 1)
-		+ ". " + to_string(date->tm_mday) + '.' /*+ to_string(date->tm_hour) + '.' + to_string(date->tm_min)*/ + ".txt";
-
-	ofstream fout(filename);
-	const Block * presentBlock = lastBlock;
-
-	if (!fout.is_open()) {
-		cout << "File I/O error...\n";
+	if (!lastBlock) {	// if (lastBlock == NULL)
+		cout << "\nThere is no block in the blockchain...\n\n";
 		return;
 	}
 
-	fout << "Blockchain current version: " << presentBlock->version << '\n';
-	for (uint64_t i = 0; i < blockCount; i++) {
-		fout << "----------------------------------------------------------\n";
-		fout << "Block #" << presentBlock->blockIndex << '\n';
-		fout << "Block Hash: \t\t" << presentBlock->blockHash << '\n';
-		
-		fout << "\nVersion: " << presentBlock->version << '\n';
-		if (presentBlock->previousBlock) {	// if (presentBlock->previousBlock != NULL)
-			fout << "Previous Block Hash: \t" << presentBlock->previousBlock->blockHash << '\n';
-		} else {
-			fout << "Previous Block Hash: \t0x0000000000000000000000000000000000000000000000000000000000000000" << '\n';
-		}
-		fout << "Merkle Hash: \t\t" << presentBlock->merkleHash << '\n';
-		fout << "Timestamp: " << timeToString(presentBlock->timestamp) << '\n';
-		fout << "Bits: " << presentBlock->bits << '\n';
-		fout << "Nonce: " << presentBlock->nonce << '\n';
+	const Block * presentBlock = lastBlock;
 
-		for (unsigned int j = 0; j < MAX_TRANSACTION_COUNT; j++) {
-			fout << "\nTransaction #" << j + 1 << '\n';
-			presentBlock->transactions[j]->print(fout);
+	o << "Blockchain current version: " << presentBlock->version << '\n';
+	for (uint64_t i = 0; i < blockCount; i++) {
+		o << "----------------------------------------------------------\n";
+		o << "Block #" << presentBlock->blockIndex << '\n';
+		o << "Block Hash: \t\t" << presentBlock->blockHash << '\n';
+		
+		o << "\nVersion: " << presentBlock->version << '\n';
+		if (presentBlock->previousBlock) {	// if (presentBlock->previousBlock != NULL)
+			o << "Previous Block Hash: \t" << presentBlock->previousBlock->blockHash << '\n';
+		} else {
+			o << "Previous Block Hash: \t0x0000000000000000000000000000000000000000000000000000000000000000" << '\n';
 		}
+		o << "Merkle Hash: \t\t" << presentBlock->merkleHash << '\n';
+		o << "Timestamp: " << timeToString(presentBlock->timestamp) << '\n';
+		o << "Bits: " << presentBlock->bits << '\n';
+		o << "Nonce: " << presentBlock->nonce << '\n';
+
+		if (presentBlock->previousBlock) {
+			for (unsigned int j = 0; j < MAX_TRANSACTION_COUNT; j++) {
+				o << "\nTransaction #" << j + 1 << '\n';
+				presentBlock->transactions[j]->print(o);
+			}
+		}
+		else {
+			o << "\nTransaction #1\n";
+			presentBlock->transactions[0]->print(o);
+		}
+		
 		presentBlock = presentBlock->previousBlock;
 	}
-
-	cout << "\n\nFile write complete!\n";
 }
 
-std::vector<UTXO> Blockchain::getUTXOTable() const
+vector<UTXO> Blockchain::getUTXOTable() const
 {
-	return std::vector<UTXO>();
+	return vector<UTXO>();
 }
 
 // Private Key를 받아 해당 key의 사용되지 않은 거래를 찾아서 반환한다.
 vector<UTXO> Blockchain::getUTXOTable(const BYTE * privateKey) const {
-	vector<Transaction *> myTransactions;
+	if (!lastBlock) {
+		cout << "\nThere is no block in the blockchain...\n";
+		return vector<UTXO>();
+	}
 	
+	vector<Transaction *> myTransactions;
 	const Block * presentBlock = lastBlock;
 	BYTE publicKey[SHA256_DIGEST_VALUELEN];
 	SHA256_Encrpyt(privateKey, SHA256_DIGEST_VALUELEN, publicKey);
@@ -176,7 +192,7 @@ vector<UTXO> Blockchain::getUTXOTable(const BYTE * privateKey) const {
 		presentBlock = presentBlock->previousBlock;
 	}
 
-	// 모든 Transaction에 대해 참조되지 않은 Transaction만 찾는다. O(n^2) - n은 myTxSize.
+	// 모든 Transaction에 대해 참조되지 않은 Transaction만 찾는다. O(n^2), n = myTransactions.size()
 	vector<UTXO> myUTXOTable;
 	for (const Transaction * myTx : myTransactions) {
 		for (const Transaction * myTx2 : myTransactions) {
@@ -202,6 +218,31 @@ vector<UTXO> Blockchain::getUTXOTable(const BYTE * privateKey) const {
 	return myUTXOTable;
 }
 
+bool Blockchain::isUTXO(const Transaction * _tx) const {
+	if (!lastBlock) {
+		cout << "\nThere is no block in the blockchain...\n";
+		return false;
+	}
+
+	const Block * presentBlock = lastBlock;
+	for (uint64_t i = 0; i < blockCount - 1; i++) {
+		for (const Transaction * tx : presentBlock->getTransactions()) {
+			for (const Input * input : tx->getInputs()) {
+				if (Block::isMemoryEqual(_tx->getTransactionHash(), input->getPreviousTransactionHash(), SHA256_DIGEST_VALUELEN))
+					return false;
+			}
+		}
+		presentBlock = presentBlock->previousBlock;
+	}
+
+	for (const Transaction * tx : presentBlock->getTransactions()) {
+		for (const Input * input : tx->getInputs()) {
+			if (Block::isMemoryEqual(_tx->getTransactionHash(), input->getPreviousTransactionHash(), SHA256_DIGEST_VALUELEN))
+				return false;
+		}
+	}
+	return true;
+}
 
 string Blockchain::timeToString(time_t t) {		// -> 분, 초는 2자리 고정에 비어있는 자리는 0으로 채우기...어떻게?
 	struct tm * date = localtime(&t);

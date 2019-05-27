@@ -97,7 +97,6 @@ fastlane/readme.md
 *.lib
 
 # Executables
-*.exe
 *.out
 *.app
 

@@ -45,8 +45,6 @@ class Block {
 	void initializeMerkleHash() const;
 	void addTransactionsFrom(std::queue<Transaction *> & transactionPool);
 
-	static bool isMemoryEqual(const void * a, const void * b, size_t size);
-
 	// getter method
 	inline int getBlockHeaderSize() const;
 	inline const BYTE * getBlockHash() const;
@@ -57,6 +55,9 @@ class Block {
 
 	// setter method
 	inline void setBits(int _bits);
+
+public:
+	static bool isMemoryEqual(const void * a, const void * b, size_t size);
 };
 
 inline int Block::getBlockHeaderSize() const {

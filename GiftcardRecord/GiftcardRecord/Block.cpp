@@ -4,7 +4,6 @@
 #include <queue>
 #include <cstring>
 #include "Block.h"
-//#include "Giftcard.h"
 #include "Transaction.h"
 using namespace std;
 
@@ -33,14 +32,8 @@ void Block::mining() {
 	SHA256_Encrpyt(blockHeader, getBlockHeaderSize(), blockHash);
 
 	int i = sizeof(blockIndex) + version.length() + sizeof(previousBlock->blockHash) + sizeof(merkleHash) + sizeof(bits) + sizeof(timestamp);
-	//const BYTE * pb;	// pointer to transactionData
 	while (!miningSuccess()) {
 		nonce++;
-
-		//pb = (BYTE *)&nonce;
-		//for (j = 0; j < sizeof(nonce); i++, j++)
-		//	blockHeader[i] = pb[j];
-
 		memcpy(blockHeader + i, &nonce, sizeof(nonce));
 
 		SHA256_Encrpyt(blockHeader, getBlockHeaderSize(), blockHash);
@@ -52,8 +45,6 @@ void Block::mining() {
 // 반환된 포인터는 후에 delete[]로 할당 해제해야 함.
 BYTE * Block::createBlockHeader() const {
 	int i = 0;			// transactionData index
-	//size_t j;			// block header index	
-	//const BYTE * pb;	// pointer to transactionData
 	BYTE * blockHeader = new BYTE[getBlockHeaderSize()];
 
 	memcpy(blockHeader + i, &blockIndex, sizeof(blockIndex));
@@ -82,38 +73,6 @@ BYTE * Block::createBlockHeader() const {
 
 	memcpy(blockHeader + i, &nonce, sizeof(nonce));
 	i += sizeof(nonce);
-
-	//pb = (BYTE *)&blockIndex;
-	//for (j = 0; j < sizeof(blockIndex); i++, j++)
-	//	buffer[i] = pb[j];
-
-	//for (j = 0; j < version.length(); i++, j++)
-	//	buffer[i] = version[j];
-
-	//if (previousBlock != NULL) {
-	//	pb = previousBlock->blockHash;
-	//	for (j = 0; j < sizeof(previousBlock->blockHash); i++, j++)
-	//		buffer[i] = pb[j];
-	//}
-	//else {
-	//	for (j = 0; j < sizeof(previousBlock->blockHash); i++, j++)
-	//		buffer[i] = 0;
-	//}
-
-	//for (j = 0; j < sizeof(merkleHash); i++, j++)
-	//	buffer[i] = merkleHash[j];
-
-	//pb = (BYTE *)&bits;
-	//for (j = 0; j < sizeof(bits); i++, j++)
-	//	buffer[i] = pb[j];
-
-	//pb = (BYTE *)&timestamp;
-	//for (j = 0; j < sizeof(timestamp); i++, j++)
-	//	buffer[i] = pb[j];
-
-	//pb = (BYTE *)&nonce;
-	//for (j = 0; j < sizeof(nonce); i++, j++)
-	//	buffer[i] = pb[j];
 
 	return blockHeader;
 }
