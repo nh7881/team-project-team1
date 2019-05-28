@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <cstdlib>
+#include <vector>
 #include "Blockchain.h"
 #include "Transaction.h"
 #include "Wallet.h"
@@ -22,6 +23,13 @@ int main()
 
 	Blockchain bc_("Blockchain 1.0", &w2_);
 	cout << bc_.getVersion() << " was created\n\n";
+
+	vector<Giftcard *> giftcardList;
+	giftcardList.push_back(new Giftcard("Love card", 10, 9));
+	giftcardList.push_back(new Giftcard("Like card", 5, 4));
+	giftcardList.push_back(new Giftcard("SSum card", 3, 2));
+	giftcardList.push_back(new Giftcard("Favorite card", 2, 1));
+	
 
 HOME://complete
 	{
@@ -52,8 +60,43 @@ BUY:
 	{
 		system("pause");
 		system("cls");
+		cout << "List    0.Back\n";
 
+		int i = 1;
+		for (Giftcard * giftcard : giftcardList) {
+			cout << i << ". " << giftcard->getName() << "\t" << giftcard->getFaceValue() <<"KRW\n";
+			i++;
+		}
 
+		int select;
+		cin >> select;
+		if (select == 0) {
+			goto HOME;
+		}
+
+		Transaction * tx = w1_.createTransaction(w2_.getPublicKey(), giftcardList[select]->getName(), giftcardList[select]->getFaceValue(), 0, "Buy");
+		Transaction * tx2 = w2_.createTransaction(w1_.getPublicKey(), "coin", giftcardList[select]->getMarketValue(), 0, "Buy");
+
+		if (tx == NULL) {
+			cout << "Seller have no amount of the giftcard you select...\n";
+		}
+		if (tx2 == NULL) {
+			cout << "You have no balance of the coin for paying...\n";
+		}
+		
+		if (tx->isValid(w2_.getPrivateKey()) && bc_.isUTXO(tx)) {
+			if (tx2->isValid(w2_.getPrivateKey()) && bc_.isUTXO(tx2)) {
+				bc_.addTransactionToPool(tx);
+				bc_.addTransactionToPool(tx2);
+				cout << "Valid transaction!\n";
+			}
+		}
+		else {
+			delete tx;
+			delete tx2;
+			cout << "Invalid transaction...\n";
+		}
+		
 		goto HOME;
 	}
 
@@ -63,7 +106,6 @@ MINING://complete
 		system("pause");
 		system("cls");
 		bc_.produceBlock(&w2_);
-		cout << "Mining block was completed!\n";
 		goto HOME;
 	}
 
@@ -180,11 +222,16 @@ SEND:
 	{
 		system("pause");
 		system("cls");
-		string type, memo;
+		string propertyType, memo;
 		uint64_t sendingAmount, fee;
+		cout << "Which property(string): ";
+		cin >> propertyType;
+
+		vector<UTXO> utxo = bc_.getUTXOTable(w1_.getPrivateKey(), propertyType);
+		w1_.setMyUTXOTable(utxo);
+
+		cout << "Your property: " << w1_.getMyUTXOAmount(propertyType) << '\n';
 		cout << "Receiver's public key: " << w1_.getPublicKey() << '\n';
-		cout << "Which type(string): ";
-		cin >> type;
 		cout << "Sending amount(integer): ";
 		cin >> sendingAmount;
 		cout << "Transaction fee(integer): ";
@@ -192,9 +239,12 @@ SEND:
 		cout << "Memo(string): ";
 		cin >> memo;
 
-		Transaction * tx_ = w2_.createTransaction(w1_.getPublicKey(), type, sendingAmount, fee, memo);
+		Transaction * tx_ = w2_.createTransaction(w1_.getPublicKey(), propertyType, sendingAmount, fee, memo);
 
-		if (tx_->isValid(w2_.getPrivateKey()) && bc_.isUTXO(tx_)) {
+		if (tx_ == NULL) {
+			cout << "You have no property of the propertyType you input...\n";
+		}
+		else if (tx_->isValid(w2_.getPrivateKey()) && bc_.isUTXO(tx_)) {
 			bc_.addTransactionToPool(tx_);
 			cout << "Valid transaction!\n";
 		}
@@ -219,9 +269,6 @@ MY_UTXO:
 	{
 
 	}
-
-	//Transaction * tx_ = w2_.createCoinbaseTransaction(new Giftcard("Giftcard Name"), 100, 0, "Memo");
-	//Transaction * tx2_ = w2_.createTransaction(w1_.getPublicKey(), type, sendingAmount, fee, memo);
 
 	
 	bc_.setVersion("Giftcard Blockchain 1.1");

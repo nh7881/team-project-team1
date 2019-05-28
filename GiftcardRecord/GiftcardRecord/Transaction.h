@@ -19,7 +19,7 @@ class Input {
 	std::uint64_t previousBlockIndex;
 
 public:
-	Input(const BYTE * _senderPrivateKey, std::uint64_t _amount, std::uint64_t _blockIndex);
+	Input(std::uint64_t _amount, std::uint64_t _blockIndex);	// coinbase input
 	Input(const BYTE * _senderPrivateKey, std::uint64_t _amount, const BYTE * _previousTransactionHash);
 	
 	// getter method
@@ -47,7 +47,7 @@ class Transaction {
 	std::vector<Input *> inputs;
 	std::vector<Output *> outputs;
 
-	std::string type;
+	std::string propertyType;
 	time_t timestamp;
 
 	std::uint64_t nonce;
@@ -57,8 +57,8 @@ public:
 	std::uint64_t blockIndex;					// hash 안 함
 	std::string memo;							// hash 안 함
 
-	Transaction(const BYTE * privateKey, std::string _type, std::uint64_t nonce, std::string _memo = NULL);
-	Transaction(std::vector<Input *> & _inputs, std::vector<Output *> & _outputs, std::string _type, 
+	Transaction(const BYTE * privateKey, std::string _propertyType, std::uint64_t nonce, std::string _memo = NULL);
+	Transaction(std::vector<Input *> & _inputs, std::vector<Output *> & _outputs, std::string _propertyType, 
 		std::uint64_t nonce, std::string _memo = NULL);
 	~Transaction();
 
@@ -71,7 +71,7 @@ public:
 
 	// getter method
 	inline time_t getTimestamp() const { return timestamp; }
-	inline const std::string getType() const { return type; }
+	inline const std::string getType() const { return propertyType; }
 	inline const std::string getMemo() const { return memo; }
 	inline const BYTE * getTransactionHash() const { return transactionHash; }
 	inline std::vector<Input *> getInputs() const { return inputs; }

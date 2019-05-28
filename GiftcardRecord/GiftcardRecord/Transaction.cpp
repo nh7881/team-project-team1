@@ -11,9 +11,11 @@
 using namespace std;
 
 
+// Coinbase input
+Input::Input(uint64_t _amount, std::uint64_t _blockIndex) : previousBlockIndex(_blockIndex), amount(_amount) {
+	memset(previousTransactionHash, 0, SHA256_DIGEST_VALUELEN);
+	memset(senderPublicKey, 0, SHA256_DIGEST_VALUELEN);
 
-Input::Input(const BYTE * _senderPrivateKey, std::uint64_t _amount, std::uint64_t _blockIndex) : previousBlockIndex(_blockIndex), amount(_amount) {
-	SHA256_Encrpyt(_senderPrivateKey, SHA256_DIGEST_VALUELEN, senderPublicKey);
 }
 
 // Assertion: parameter로 32byte의 문자열 입력
@@ -23,7 +25,7 @@ Input::Input(const BYTE * _senderPrivateKey, std::uint64_t _amount, const BYTE *
 }
 
 
-//-----------------------------------------------------------------------------------------
+/*-----------------------------------------------------------------------------------------*/
 
 
 // Assertion: parameter로 32byte의 문자열 입력
@@ -32,16 +34,17 @@ Output::Output(const BYTE * _receiverPublicKey, std::uint64_t _amount) : amount(
 }
 
 
-//-----------------------------------------------------------------------------------------
+/*-----------------------------------------------------------------------------------------*/
 
-Transaction::Transaction(const BYTE * privateKey, string _type, uint64_t _nonce, string _memo)
-	: type(_type), nonce(_nonce), memo(_memo) {
+
+Transaction::Transaction(const BYTE * privateKey, string _propertyType, uint64_t _nonce, string _memo)
+	: propertyType(_propertyType), nonce(_nonce), memo(_memo) {
 	timestamp = time(NULL);
 	hashing();
 }
 
-Transaction::Transaction(vector<Input *> & _inputs, vector<Output *> & _outputs, string _type, uint64_t _nonce, string _memo)
-	: inputs(_inputs), outputs(_outputs), type(_type), nonce(_nonce), memo(_memo) {
+Transaction::Transaction(vector<Input *> & _inputs, vector<Output *> & _outputs, string _propertyType, uint64_t _nonce, string _memo)
+	: inputs(_inputs), outputs(_outputs), propertyType(_propertyType), nonce(_nonce), memo(_memo) {
 	timestamp = time(NULL);
 	hashing();
 }
@@ -57,7 +60,6 @@ Transaction::~Transaction() {
 
 void Transaction::hashing() {
 	const BYTE * txData = createTransactionData();
-
 	SHA256_Encrpyt(txData, getTransactionDataSize(), transactionHash);
 	delete[] txData;
 }
@@ -87,21 +89,22 @@ bool Transaction::isValid(const BYTE * senderPrivateKey) const {
 }
 
 bool Transaction::isValidCoinbase() const {
+	BYTE nullHash[SHA256_DIGEST_VALUELEN];
+	memset(nullHash, 0, SHA256_DIGEST_VALUELEN);
+	if (Block::isMemoryEqual(inputs[0]->getPreviousTransactionHash(), nullHash, SHA256_DIGEST_VALUELEN)) {
+		// isValidCoinbase
+		// coinbase reward 확인
+		//
 
-
-
-
-
-
+	}
 
 	return false;
 }
 
-// Assertion: getTransactionSize와 i의 최종 값은 동일해야 한다.
 // 반환된 포인터는 delete[]로 메모리 할당 해제가 필요함.
 const BYTE * Transaction::createTransactionData() const {
-	int i = 0;							// transactionData index
-	BYTE * txData = new BYTE[getTransactionDataSize()];
+	int i = 0;											// transactionData index
+	BYTE * txData = new BYTE[getTransactionDataSize()];	// Assertion: getTransactionSize와 i의 최종 값은 동일해야 한다.
 	uint64_t amount, previousBlockIndex;
 
 	for(Input * input : inputs) {
@@ -129,8 +132,8 @@ const BYTE * Transaction::createTransactionData() const {
 		i += sizeof(output->getAmount());
 	}
 	
-	memcpy(txData + i, type.c_str(), type.length());
-	i += type.length();
+	memcpy(txData + i, propertyType.c_str(), propertyType.length());
+	i += propertyType.length();
 
 	memcpy(txData + i, &timestamp, sizeof(timestamp));
 	i += sizeof(timestamp);
@@ -140,7 +143,7 @@ const BYTE * Transaction::createTransactionData() const {
 
 int Transaction::getTransactionDataSize() const {
 	return inputs.size() * sizeof(Input) + outputs.size() * sizeof(Output)
-		+ type.length() + sizeof(timestamp);
+		+ propertyType.length() + sizeof(timestamp);
 }
 
 int Transaction::getTotalInputs() const
@@ -161,21 +164,21 @@ std::string Transaction::toString() const {
 
 void Transaction::print(ostream & o) const {
 	o << "Transaction Hash: \t" << transactionHash << "\n";
-	
+	o << "Type: " << propertyType << '\n';
+	o << "Timestamp: " << Blockchain::timeToString(timestamp) << '\n';
+
 	for (Input * input : inputs) {
-		o << "\tSender's public key: " << input->getSenderPublicKey() << '\n';
-		o << "\tSending amount: " << input->getAmount() << '\n';
-		o << "\tPrevious transaction hash: " << input->getPreviousTransactionHash() << '\n';
-		o << "\tPrevious transaction in " << input->getPreviousBlockIndex() << "th Block\n\n";
+		o << "\nSender's public key:		" << input->getSenderPublicKey() << '\n';
+		o << "Sending amount: " << input->getAmount() << '\n';
+		o << "Previous transaction hash:	" << input->getPreviousTransactionHash() << '\n';
+		o << "Previous transaction in " << input->getPreviousBlockIndex() << "th Block\n";
 	}
 
 	for (Output * output : outputs) {
-		o << "\tReceiver's public key: " << output->getReceiverPublicKey() << '\n';
-		o << "\tReceiving amount: " << output->getAmount() << "\n\n";
+		o << "\nReceiver's public key:		" << output->getReceiverPublicKey() << '\n';
+		o << "Receiving amount: " << output->getAmount() << '\n';
 	}
 	
-	o << "Type: " << type << '\n';
-	o << "Timestamp: " << Blockchain::timeToString(timestamp) << '\n';
 	o << "Memo: " << memo << '\n';
 }
 

@@ -33,6 +33,7 @@ public:
 	bool isUTXO(const Transaction * tx) const;
 	std::vector<UTXO> getUTXOTable() const;
 	std::vector<UTXO> getUTXOTable(const BYTE * privateKey) const;	// -> test 필요함
+	std::vector<UTXO> getUTXOTable(const BYTE * privateKey, std::string propertyType) const;
 
 	std::string getFileName() const;
 	void printBlockchain(std::ostream & o) const;

@@ -127,7 +127,7 @@ void Block::initializeMerkleHash() const {
 }
 
 void Block::addTransactionsFrom(queue<Transaction *> & transactionPool) {
-	for (unsigned int i = 0; i < MAX_TRANSACTION_COUNT; i++) {
+	while (transactions.size() < MAX_TRANSACTION_COUNT) {
 		transactions.push_back(transactionPool.front());
 		transactionPool.pop();
 	}

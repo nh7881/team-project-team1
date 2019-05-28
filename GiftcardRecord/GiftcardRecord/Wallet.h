@@ -43,8 +43,8 @@ class Wallet {
 public:
 	Wallet(std::string _passPhrase);
 
-	Transaction * createCoinbaseTransaction(std::uint64_t blockIndex, std::string type, std::string memo = NULL);
-	Transaction * createTransaction(const BYTE * receiverPublicKey, std::string type, std::int64_t sendingAmount,
+	Transaction * createCoinbaseTransaction(std::uint64_t blockIndex, std::string propertyType, std::string memo = NULL);
+	Transaction * createTransaction(const BYTE * receiverPublicKey, std::string propertyType, std::int64_t sendingAmount,
 		std::int64_t fee, std::string memo = NULL);
 
 	// getter method
@@ -52,7 +52,7 @@ public:
 	inline const BYTE * getPublicKey() const;
 	inline std::vector<UTXO> getMyUTXOTable() const;
 	inline std::vector<UTXO> getUTXOTable() const;
- 	int getMyUTXOAmount() const;
+ 	int getMyUTXOAmount(std::string propertyType) const;
 
 	// setter method
 	inline void setMyUTXOTable(std::vector<UTXO> & _myUTXOTable);

@@ -44,17 +44,17 @@ class Block {
 	void mining();							// <- test 필요
 	void initializeMerkleHash() const;
 	void addTransactionsFrom(std::queue<Transaction *> & transactionPool);
+	inline int getBlockHeaderSize() const;
 
 	// getter method
-	inline int getBlockHeaderSize() const;
-	inline const BYTE * getBlockHash() const;
-	inline const Block * getPreviousBlock() const;
-	inline const BYTE * getMerkleHash() const;
-	inline time_t getTimestamp() const;
-	inline std::vector<Transaction *> getTransactions() const;
+	inline const BYTE * getBlockHash() const { return blockHash; }
+	inline const Block * getPreviousBlock() const { return previousBlock; }
+	inline const BYTE * getMerkleHash() const { return merkleHash; }
+	inline time_t getTimestamp() const { return timestamp; }
+	//inline std::vector<Transaction *> getTransactions() const { return transactions; }
 
 	// setter method
-	inline void setBits(int _bits);
+	inline void setBits(int _bits) { bits = _bits; }
 
 public:
 	static bool isMemoryEqual(const void * a, const void * b, size_t size);
@@ -75,30 +75,6 @@ inline bool Block::miningSuccess() const {
 			return false;
 	}
 	return true;
-}
-
-inline const BYTE * Block::getBlockHash() const {
-	return blockHash;
-}
-
-inline const Block * Block::getPreviousBlock() const {
-	return previousBlock;
-}
-
-inline const BYTE * Block::getMerkleHash() const {
-	return merkleHash;
-}
-
-inline time_t Block::getTimestamp() const {
-	return timestamp;
-}
-
-inline std::vector<Transaction *> Block::getTransactions() const {
-	return transactions;
-}
-
-inline void Block::setBits(int _bits) {
-	bits = _bits;
 }
 
 #endif // !BLOCK_H
