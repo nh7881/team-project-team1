@@ -73,6 +73,11 @@ BUY:
 		if (select == 0) {
 			goto HOME;
 		}
+		
+		if (select > 4) {
+			cout << "invalid number...\n";
+			goto BUY;
+		}
 
 		Transaction * tx = w1_.createTransaction(w2_.getPublicKey(), giftcardList[select]->getName(), giftcardList[select]->getFaceValue(), 0, "Buy");
 		Transaction * tx2 = w2_.createTransaction(w1_.getPublicKey(), "coin", giftcardList[select]->getMarketValue(), 0, "Buy");
